@@ -200,7 +200,7 @@ function reserveUpcoming(id,mode){
   selectedProduct=upcomingProducts.find(p=>p.id===id);
   reserveMode=mode;
   if(!selectedProduct)return;
-  document.getElementById("reserveProduct").innerHTML=`<b>${esc(selectedProduct.name)}</b> · ${money(selectedProduct.price)}<br><span class="muted">⏳ Próximamente · Reserva por 24 horas · ${mode==="delivery"?"🛵 Delivery":"🏪 Recoger"}</span>`;
+  document.getElementById("reserveProduct").innerHTML=`<b>${esc(selectedProduct.name)}</b> · ${money(selectedProduct.price)}<br><span class="muted">⏳ Próximamente · Reserva sin límite de tiempo · ${mode==="delivery"?"🛵 Delivery":"🏪 Recoger"}</span>`;
   document.getElementById("deliveryFields").style.display=mode==="delivery"?"block":"none";
   document.getElementById("pickupFields").style.display=mode==="pickup"?"block":"none";
   document.getElementById("reserveBtn").textContent=mode==="delivery"?"Confirmar reserva para delivery":"Confirmar reserva para recoger";

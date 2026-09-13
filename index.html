@@ -65,6 +65,26 @@ nav .on{color:#e50914}
 /* MEDIOUSAO: hide global cancel reservation control */
 #reservationCancelSlot{display:none!important;}
 </style>
+
+<style>
+/* MEDIOUSAO: remove cancel reservation control v2 */
+#reservationCancelSlot, #reservationCancel, .reservationCancel, .reservation-cancel, [id*="reservationCancel"], [class*="reservationCancel"] { display:none!important; }
+</style>
+<script>
+(function(){
+  function hide(){
+    document.querySelectorAll('button,a,div,section').forEach(function(el){
+      var t=(el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+      if(t === '❌ cancelar reserva' || t === 'cancelar reserva' || t.indexOf('cancelar reserva') === 0){
+        if(el.id !== 'mediousaoBottomNav' && !el.closest('#mediousaoBottomNav')) el.style.display='none';
+      }
+    });
+  }
+  hide();
+  new MutationObserver(hide).observe(document.body,{childList:true,subtree:true});
+  setInterval(hide,1000);
+})();
+</script>
 </head>
 <body>
 <div class="app">

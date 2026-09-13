@@ -376,6 +376,10 @@ async function setUpcomingState(id,state){
     const {error:publishError}=await client.from('products').update({active:true}).eq('id',id);
     if(publishError){alert('El producto se marcó Próximamente, pero no pudo publicarse: '+publishError.message);return;}
   }
+  if(state==='upcoming'){
+    const {error:publishError}=await client.from('products').update({active:true}).eq('id',id);
+    if(publishError){alert('El producto se marcó Próximamente, pero no pudo publicarse: '+publishError.message);return;}
+  }
   const msg=document.getElementById('adminMsg');
   if(msg){msg.className='notice';msg.textContent=state==='upcoming'?'Producto marcado como Próximamente. ⏳':state==='available'?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
   await loadAdminProducts();

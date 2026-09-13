@@ -35,3 +35,5 @@ jobs:
           git add .github/workflows/category-filters-fix.yml
           git commit -m "Remove temporary category filter workflow" || true
           git push
+
+# Force execution after cache/deployment delay.

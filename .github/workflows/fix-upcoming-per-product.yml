@@ -1,10 +1,9 @@
-name: Próximamente controls
+name: Fix upcoming per product
 on:
   workflow_dispatch:
-permissions:
-  contents: read
+
 jobs:
-  noop:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Workflow legacy desactivado"
+      - run: echo "Legacy workflow disabled."

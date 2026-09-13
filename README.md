@@ -10,13 +10,15 @@ Marketplace de moda usada y nueva para la **zona inicial de Bonao, República Do
 - Compras y reservas: `Bonao`.
 - Delivery: requiere sector y dirección.
 - Recogida personal: disponible como alternativa al delivery.
-- Reservas: 24 horas mediante función SQL atómica.
+- Reservas de productos normales: 24 horas.
+- Reservas de productos `⏳ Próximamente`: **sin límite de tiempo**, hasta que el cliente cancele o la administración gestione la reserva.
+- El cliente puede cancelar una reserva activa.
 - Estructura preparada para ampliar a otras ciudades posteriormente.
 
 ## Archivos
 
 - `index.html` — aplicación web de MEDIOUSAO.
-- `MEDIOUSAO_RESERVAS.sql` — cambios de base de datos y función de reservas de 24 horas.
+- `MEDIOUSAO_RESERVAS.sql` — cambios de base de datos y funciones de reservas.
 
 ## Configuración de Supabase
 
@@ -43,7 +45,7 @@ git add .
 git commit -m "Preparar MEDIOUSAO para Bonao"
 git branch -M main
 git remote add origin TU_REPOSITORIO
- git push -u origin main
+git push -u origin main
 ```
 
 ## Seguridad

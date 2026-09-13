@@ -1,8 +1,17 @@
-/* MEDIOUSAO UI v2026-09-13-18 */
+/* MEDIOUSAO UI v2026-09-13-19 */
 (function(){
   function hideHomeExtras(){
     const home=document.getElementById('home');
     const homeActive=!!(home&&home.classList.contains('active'));
+    if(homeActive){
+      document.querySelectorAll('body *').forEach(el=>{
+        if(el.id==='homeGrid' || el.closest('#homeGrid'))return;
+        const t=(el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+        if(t && t.length<120 && t.includes('bonao') && t.includes('disponible')){
+          el.style.setProperty('display','none','important');
+        }
+      });
+    }
     const globalBonao=document.querySelector('.app > .notice');
     if(globalBonao && homeActive) globalBonao.style.setProperty('display','none','important');
     if(!home)return;
@@ -14,6 +23,7 @@
       const t=(el.textContent||'').trim().toLowerCase();
       if(!t)return;
       if(t.includes('catálogo conectado a mediousao') || t.includes('catalogo conectado a mediousao') ||
+         t.includes('solo disponible en bonao') || t.includes('disponible en bonao') ||
          (t.includes('bonao') && (t.includes('servicio disponible') || t.includes('solo procesa') || t.includes('funcionando') || t.includes('exclusivamente en bonao')))){
         el.style.setProperty('display','none','important');
       }
@@ -23,9 +33,9 @@
     });
   }
   function inject(){
-    if(document.getElementById('mediousao-ui-v18'))return;
+    if(document.getElementById('mediousao-ui-v19'))return;
     const style=document.createElement('style');
-    style.id='mediousao-ui-v18';
+    style.id='mediousao-ui-v19';
     style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}
@@ -52,7 +62,6 @@
       #homeGrid .card button,#homeGrid .card a{display:none!important}
       #home input[type="search"],#home input[placeholder*="Buscar" i],#home input[placeholder*="buscar" i],#home input[placeholder*="Tenis" i],#home .search,#home .search-box,#home .searchbar{display:none!important}
       #home [id*="connection" i],#home [class*="connection" i]{display:none!important}
-      /* Aviso de Bonao: se muestra fuera de Casa, nunca en la pantalla de inicio */
       .app > .notice{display:none!important}
     `;
     document.head.appendChild(style);

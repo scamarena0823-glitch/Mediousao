@@ -179,14 +179,14 @@ async function loadUpcoming(){
   if(!box)return;
   box.innerHTML="<div class='notice'>Cargando Próximamente…</div>";
   const {data,error}=await client.from("products")
-    .select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city")
+    .select("*")
     .eq("city",SERVICE_CITY)
     .eq("is_upcoming",true)
     .gt("stock",0)
-    .order("arrival_date",{ascending:true,nullsFirst:false});
+    .order("created_at",{ascending:false});
   if(error){
     console.error("MEDIOUSAO Próximamente:",error);
-    box.innerHTML="<div class='error'>No pudimos cargar Próximamente. Revisa la conexión con Supabase.</div>";
+    box.innerHTML=`<div class='error'>No pudimos cargar Próximamente.<br><small>${esc(error.message||error)}</small></div>`;
     return;
   }
   upcomingProducts=(data||[]).filter(p=>p.active===true);

@@ -1,0 +1,40 @@
+name: MEDIOUSAO final Explore filter cleanup
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove old filter controls from index.html
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          api="https://api.github.com/repos/${{ github.repository }}/contents/index.html"
+          data=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api?ref=main")
+          sha=$(echo "$data" | jq -r '.sha')
+          content=$(echo "$data" | jq -r '.content' | tr -d '\n' | base64 -d)
+          if printf '%s' "$content" | grep -q 'mediousao-final-explore-filter-cleanup'; then
+            echo "Cleanup already present"
+            exit 0
+          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/index.html')
+          PY
+          python3 - <<'PY'
+          import os, json, base64, urllib.request
+          api=os.environ['API']
+          PY
+          marker='<!-- mediousao-final-explore-filter-cleanup -->'
+          css='<style id="mediousao-final-explore-filter-cleanup">#catalog>.filters{display:none!important;}#catalog select{display:none!important;}#typeFilter,#audienceFilter,#categoryFilter{display:none!important;}#mediousaoCategoryFilters{display:grid!important;}</style>'
+          newcontent=content.replace('</head>', css+marker+'</head>', 1)
+          encoded=$(printf '%s' "$newcontent" | base64 -w 0)
+          payload=$(jq -n --arg msg "Final Explore filter cleanup" --arg content "$encoded" --arg sha "$sha" '{message:$msg,content:$content,sha:$sha,branch:"main"}')
+          curl -fsSL -X PUT -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "Content-Type: application/json" "$api" -d "$payload" >/dev/null
+          echo "index.html updated with final cleanup"
+        env:
+          API: https://api.github.com/repos/${{ github.repository }}/contents/index.html

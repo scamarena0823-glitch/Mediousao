@@ -1,46 +1,9 @@
-name: Add ADM controls for Próximamente
-
+name: Add upcoming admin
 on:
-  push:
-    paths:
-      - '.github/workflows/add-upcoming-admin.yml'
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  patch:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Patch index.html
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          marker = '<div id="adminProducts"></div>'
-          if 'id="adminUpcomingProducts"' not in s:
-              block = '''<div class="box" style="padding:16px;margin-bottom:14px"><div class="row"><h2>⏳ Próximamente</h2><button class="btn" onclick="loadUpcomingAdmin()">Actualizar</button></div><div class="notice">Marca aquí los productos que todavía no están disponibles. Aparecerán en Inicio como “⏳ Próximamente” y podrán reservarse por 24 horas.</div><div id="adminUpcomingProducts"></div></div>'''
-              needle = '</div>\n\n  <div class="box" style="padding:16px">\n    <div class="row"><h2>Pedidos</h2>'
-              if needle in s:
-                  s = s.replace(needle, '</div>\n\n  ' + block + '\n\n  <div class="box" style="padding:16px">\n    <div class="row"><h2>Pedidos</h2>', 1)
-              else:
-                  raise SystemExit('Admin insertion point not found')
-
-          if 'function loadUpcomingAdmin()' not in s:
-              js = r'''\nasync function loadUpcomingAdmin(){\n  const box=document.getElementById("adminUpcomingProducts");\n  if(!box) return;\n  box.innerHTML="Cargando productos…";\n  const {data,error}=await client.from("products").select("*").eq("city",SERVICE_CITY).order("created_at",{ascending:false});\n  if(error){box.innerHTML='<div class="error">'+esc(error.message)+'</div>';return;}\n  if(!data?.length){box.innerHTML='<div class="notice">No hay productos.</div>';return;}\n  box.innerHTML=data.map(p=>`<div class="admin-item"><div class="row"><div><b>${esc(p.name)}</b><div class="muted">${money(p.price)} · Stock: ${p.stock??0}</div></div><span class="status-pill ${p.is_upcoming?'red':'green'}">${p.is_upcoming?'⏳ Próximamente':'Disponible'}</span></div><button class="btn ${p.is_upcoming?'dark':''}" style="margin-top:8px;width:100%" onclick="toggleUpcomingAdmin('${p.id}',${!p.is_upcoming})">${p.is_upcoming?'Quitar de Próximamente':'⏳ Marcar Próximamente'}</button></div>`).join("");\n}\n\nasync function toggleUpcomingAdmin(id,val){\n  const {error}=await client.from("products").update({is_upcoming:val}).eq("id",id);\n  if(error){alert("No se pudo actualizar: "+error.message);return;}\n  await loadUpcomingAdmin();\n  if(typeof loadUpcoming==='function') await loadUpcoming();\n  if(typeof loadAdminProducts==='function') await loadAdminProducts();\n}\n'''
-              s = s.replace('</script>', js + '\n</script>', 1)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Commit patch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git diff --cached --quiet || git commit -m "Add ADM Próximamente controls"
-          git push
+      - run: echo "Legacy workflow disabled."

@@ -1,4 +1,4 @@
-/* MEDIOUSAO UI + CATALOGO FIX v2026-09-13 */
+/* MEDIOUSAO UI + CATALOGO FIX v2026-09-13-14 */
 (function(){
   const PAGE_SIZE=20;
   let currentPage=1;

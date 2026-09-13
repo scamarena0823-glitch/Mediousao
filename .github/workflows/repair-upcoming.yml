@@ -1,5 +1,7 @@
 name: Repair Próximamente
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,13 +15,12 @@ jobs:
           git checkout 1adcef9d9e5e7decfa8354683071acd3866b896d -- index.html
           python3 - <<'PY'
           from pathlib import Path
-          import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
           marker='<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->'
           if marker in s:
               s=s[:s.index(marker)]
-          block=r'''<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->
+          block='''<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->
           <script>
           async function toggleUpcoming(id, value){
             if(value){
@@ -27,7 +28,7 @@ jobs:
               if(error){alert('No se pudo marcar Próximamente: '+error.message);return;}
               const msg=document.getElementById('adminMsg'); if(msg){msg.className='notice';msg.textContent='Producto marcado como Próximamente. ✅';}
             }else{
-              const makeAvailable=confirm('Producto retirado de Próximamente.\n\nPulsa Aceptar para PONERLO DISPONIBLE.\nPulsa Cancelar para marcarlo como VENDIDO / NO DISPONIBLE.');
+              const makeAvailable=confirm('Producto retirado de Próximamente.\\n\\nPulsa Aceptar para PONERLO DISPONIBLE.\\nPulsa Cancelar para marcarlo como VENDIDO / NO DISPONIBLE.');
               const {error}=await client.from('products').update({is_upcoming:false,available:makeAvailable}).eq('id',id);
               if(error){alert('No se pudo actualizar: '+error.message);return;}
               const msg=document.getElementById('adminMsg'); if(msg){msg.className='notice';msg.textContent=makeAvailable?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}

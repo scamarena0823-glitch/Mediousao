@@ -175,7 +175,7 @@ function startCheckout(){if(!cart.length)return;document.getElementById("checkou
 async function loadUpcoming(){
   const box=document.getElementById("upcomingGrid");
   if(!box)return;
-  const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("city",SERVICE_CITY).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});
+  const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});
   if(error){console.error(error);box.innerHTML="<div class='notice'>No pudimos cargar Próximamente.</div>";return;}
   upcomingProducts=data||[];
   box.innerHTML=upcomingProducts.map(p=>{const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`}).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
@@ -238,7 +238,7 @@ async function submitReservation(){
  const deliveryDate=reserveMode==="delivery"?document.getElementById("rDate").value:null,deliveryTime=reserveMode==="delivery"?document.getElementById("rTime").value:null;
  const {data,error}=await client.rpc("reserve_product",{p_product_id:selectedProduct.id,p_customer_name:name,p_customer_phone:phone,p_fulfillment_method:reserveMode,p_delivery_address:address,p_delivery_sector:sector,p_delivery_date:deliveryDate,p_delivery_time:deliveryTime,p_city:SERVICE_CITY});
  if(error){alert("La reserva necesita la actualización de la base de datos antes de activarse.");console.error(error);return}
- alert("¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();
+ alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();
 }
 
 let adminUser=null;

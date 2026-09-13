@@ -1,0 +1,37 @@
+name: MEDIOUSAO category filters fix
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Explore filters
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          style='''\n<style id="mediousao-category-filters">\n#mediousaoCategoryFilters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 16px}\n#mediousaoCategoryFilters button{border:1px solid #e1e2e6;background:#fff;border-radius:13px;min-height:48px;padding:8px 5px;font-size:14px;font-weight:800;color:#222;box-shadow:0 3px 10px rgba(0,0,0,.04)}\n#mediousaoCategoryFilters button.active{background:#111;color:#fff;border-color:#111}\n#catalog>.filters{display:none!important}\n@media(max-width:380px){#mediousaoCategoryFilters{gap:6px}#mediousaoCategoryFilters button{font-size:13px}}\n</style>\n'''
+          script='''\n<script id="mediousao-category-filter-script">\n(function(){\n  function init(){\n    var catalog=document.getElementById('catalog');\n    if(!catalog || document.getElementById('mediousaoCategoryFilters')) return;\n    var box=document.createElement('div');\n    box.id='mediousaoCategoryFilters';\n    var items=[\n      ['Todos','type','','audience',''],\n      ['Usado','type','used','audience',''],\n      ['Nuevo','type','new','audience',''],\n      ['Hombre','type','','audience','men'],\n      ['Mujer','type','','audience','women'],\n      ['Niño','type','','audience','kids']\n    ];\n    items.forEach(function(x,i){\n      var b=document.createElement('button');\n      b.type='button'; b.textContent=x[0]; if(i===0)b.className='active';\n      b.onclick=function(){\n        var t=document.getElementById('typeFilter'), a=document.getElementById('audienceFilter');\n        if(t)t.value=x[2]; if(a)a.value=x[4];\n        box.querySelectorAll('button').forEach(function(z){z.classList.remove('active')}); b.classList.add('active');\n        if(typeof window.render==='function') window.render();\n      };\n      box.appendChild(b);\n    });\n    var grid=document.getElementById('grid');\n    if(grid) catalog.insertBefore(box,grid); else catalog.appendChild(box);\n  }\n  function run(){init();}\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run); else run();\n  new MutationObserver(run).observe(document.body,{childList:true,subtree:true});\n})();\n</script>\n'''
+          if 'id="mediousao-category-filters"' not in s:
+              s=s.replace('</head>',style+'</head>')
+          if 'id="mediousao-category-filter-script"' not in s:
+              s=s.replace('</body>',script+'</body>')
+          p.write_text(s)
+          PY
+      - name: Commit fix and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix Explore category filters" || true
+          rm -f .github/workflows/category-filters-fix.yml
+          git add .github/workflows/category-filters-fix.yml
+          git commit -m "Remove temporary category filter workflow" || true
+          git push

@@ -12,31 +12,71 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch Próximamente visibility safely
+      - name: Repair Próximamente visibility and state
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
+          import re
 
-          s=s.replace('Reserva por 24 h</span>', 'Reserva sin límite de tiempo</span>')
-          s=s.replace('Reserva por 24 horas</h2>', 'Reserva</h2>')
-          s=s.replace('La reserva dura 24 horas.</div>', 'La reserva se mantiene sin límite de tiempo.</div>')
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
 
-          old='''const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("city",SERVICE_CITY).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});'''
-          new='''const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});'''
-          s=s.replace(old,new)
+          # Textos de reserva: Próximamente nunca caduca.
+          s = s.replace('Reserva por 24 h</span>', 'Reserva sin límite de tiempo</span>')
+          s = s.replace('Reserva por 24 horas</h2>', 'Reserva</h2>')
+          s = s.replace('La reserva dura 24 horas.</div>', 'La reserva se mantiene sin límite de tiempo.</div>')
 
-          old2='alert("¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();'
-          new2='alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();'
-          s=s.replace(old2,new2)
+          # Al volver a Inicio, forzar una recarga de Próximamente.
+          old_show = 'if(id==="cart")document.getElementById("navCart").classList.add("on");\n render();scrollTo(0,0);'
+          new_show = 'if(id==="cart")document.getElementById("navCart").classList.add("on");\n render();\n if(id==="home" && typeof loadUpcoming==="function") loadUpcoming();\n scrollTo(0,0);'
+          s = s.replace(old_show, new_show)
 
-          p.write_text(s,encoding='utf-8')
+          # Sustituir completamente loadUpcoming por una versión independiente de la carga normal.
+          pattern = r'async function loadUpcoming\(\)\{.*?\n\}\nfunction reserveUpcoming'
+          replacement = r'''async function loadUpcoming(){
+            const box=document.getElementById("upcomingGrid");
+            if(!box)return;
+            box.innerHTML="<div class='notice'>Cargando Próximamente…</div>";
+            const {data,error}=await client.from("products")
+              .select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city")
+              .eq("city",SERVICE_CITY)
+              .eq("is_upcoming",true)
+              .gt("stock",0)
+              .order("arrival_date",{ascending:true,nullsFirst:false});
+            if(error){
+              console.error("MEDIOUSAO Próximamente:",error);
+              box.innerHTML="<div class='error'>No pudimos cargar Próximamente. Revisa la conexión con Supabase.</div>";
+              return;
+            }
+            upcomingProducts=(data||[]).filter(p=>p.active===true);
+            box.innerHTML=upcomingProducts.map(p=>{
+              const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);
+              const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";
+              return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`;
+            }).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
+          }
+          function reserveUpcoming'''
+          s2, n = re.subn(pattern, replacement, s, flags=re.S)
+          if n:
+              s = s2
+
+          # Cuando ADM marca Próximamente, asegurar que el producto esté publicado (active=true).
+          old_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}"
+          new_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}\n  if(state==='upcoming'){\n    const {error:publishError}=await client.from('products').update({active:true}).eq('id',id);\n    if(publishError){alert('El producto se marcó Próximamente, pero no pudo publicarse: '+publishError.message);return;}\n  }"
+          s = s.replace(old_rpc, new_rpc)
+
+          # La reserva de un producto Próximamente es ilimitada.
+          old_alert = 'alert("¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();'
+          new_alert = 'alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();'
+          s = s.replace(old_alert, new_alert)
+
+          p.write_text(s, encoding='utf-8')
+          print('Patched index.html')
           PY
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Fix Próximamente visibility on Inicio"
+          git diff --cached --quiet || git commit -m "Fix Próximamente visibility and publishing"
           git push

@@ -32,3 +32,5 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m 'Final cleanup Explore filters'
           git push
+
+# Trigger cleanup verification

@@ -8,32 +8,30 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Update Explore filters
+      - name: Apply category buttons directly to latest main
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           python3 - <<'PY'
-          from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text()
-          style='''\n<style id="mediousao-category-filters">\n#mediousaoCategoryFilters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 16px}\n#mediousaoCategoryFilters button{border:1px solid #e1e2e6;background:#fff;border-radius:13px;min-height:48px;padding:8px 5px;font-size:14px;font-weight:800;color:#222;box-shadow:0 3px 10px rgba(0,0,0,.04)}\n#mediousaoCategoryFilters button.active{background:#111;color:#fff;border-color:#111}\n#catalog>.filters{display:none!important}\n@media(max-width:380px){#mediousaoCategoryFilters{gap:6px}#mediousaoCategoryFilters button{font-size:13px}}\n</style>\n'''
-          script='''\n<script id="mediousao-category-filter-script">\n(function(){\n  function init(){\n    var catalog=document.getElementById('catalog');\n    if(!catalog || document.getElementById('mediousaoCategoryFilters')) return;\n    var box=document.createElement('div');\n    box.id='mediousaoCategoryFilters';\n    var items=[\n      ['Todos','type','','audience',''],\n      ['Usado','type','used','audience',''],\n      ['Nuevo','type','new','audience',''],\n      ['Hombre','type','','audience','men'],\n      ['Mujer','type','','audience','women'],\n      ['Niño','type','','audience','kids']\n    ];\n    items.forEach(function(x,i){\n      var b=document.createElement('button');\n      b.type='button'; b.textContent=x[0]; if(i===0)b.className='active';\n      b.onclick=function(){\n        var t=document.getElementById('typeFilter'), a=document.getElementById('audienceFilter');\n        if(t)t.value=x[2]; if(a)a.value=x[4];\n        box.querySelectorAll('button').forEach(function(z){z.classList.remove('active')}); b.classList.add('active');\n        if(typeof window.render==='function') window.render();\n      };\n      box.appendChild(b);\n    });\n    var grid=document.getElementById('grid');\n    if(grid) catalog.insertBefore(box,grid); else catalog.appendChild(box);\n  }\n  function run(){init();}\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run); else run();\n  new MutationObserver(run).observe(document.body,{childList:true,subtree:true});\n})();\n</script>\n'''
-          if 'id="mediousao-category-filters"' not in s:
-              s=s.replace('</head>',style+'</head>')
-          if 'id="mediousao-category-filter-script"' not in s:
-              s=s.replace('</body>',script+'</body>')
-          p.write_text(s)
+          import os,base64,json,urllib.request
+          api='https://api.github.com/repos/scamarena0823-glitch/Mediousao/contents/index.html'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'mediousao-fix'}
+          req=urllib.request.Request(api,headers=headers)
+          data=json.load(urllib.request.urlopen(req))
+          s=base64.b64decode(data['content']).decode('utf-8')
+          style='''\n<style id="mediousao-category-filters">#mediousaoCategoryFilters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 16px}#mediousaoCategoryFilters button{border:1px solid #e1e2e6;background:#fff;border-radius:13px;min-height:48px;padding:8px 5px;font-size:14px;font-weight:800;color:#222;box-shadow:0 3px 10px rgba(0,0,0,.04)}#mediousaoCategoryFilters button.active{background:#111;color:#fff;border-color:#111}#catalog>.filters{display:none!important}@media(max-width:380px){#mediousaoCategoryFilters{gap:6px}#mediousaoCategoryFilters button{font-size:13px}}</style>\n'''
+          script='''\n<script id="mediousao-category-filter-script">(function(){function init(){var catalog=document.getElementById('catalog');if(!catalog||document.getElementById('mediousaoCategoryFilters'))return;var box=document.createElement('div');box.id='mediousaoCategoryFilters';var items=[['Todos','',''],['Usado','used',''],['Nuevo','new',''],['Hombre','','men'],['Mujer','','women'],['Niño','','kids']];items.forEach(function(x,i){var b=document.createElement('button');b.type='button';b.textContent=x[0];if(i===0)b.className='active';b.onclick=function(){var t=document.getElementById('typeFilter'),a=document.getElementById('audienceFilter');if(t)t.value=x[1];if(a)a.value=x[2];box.querySelectorAll('button').forEach(function(z){z.classList.remove('active')});b.classList.add('active');if(typeof window.render==='function')window.render()};box.appendChild(b)});var grid=document.getElementById('grid');if(grid)catalog.insertBefore(box,grid);else catalog.appendChild(box)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();new MutationObserver(init).observe(document.body,{childList:true,subtree:true})})();</script>\n'''
+          if 'id="mediousao-category-filters"' not in s:s=s.replace('</head>',style+'</head>')
+          if 'id="mediousao-category-filter-script"' not in s:s=s.replace('</body>',script+'</body>')
+          payload=json.dumps({'message':'Fix Explore category filters','content':base64.b64encode(s.encode()).decode(),'sha':data['sha'],'branch':'main'}).encode()
+          r=urllib.request.Request(api,data=payload,headers={**headers,'Content-Type':'application/json'},method='PUT')
+          urllib.request.urlopen(r).read()
+          print('index.html updated successfully')
           PY
-      - name: Commit fix and remove workflow
+      - name: Remove temporary workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "Fix Explore category filters" || true
-          rm -f .github/workflows/category-filters-fix.yml
-          git add .github/workflows/category-filters-fix.yml
-          git commit -m "Remove temporary category filter workflow" || true
-          git push
-
-# Force execution after cache/deployment delay.
+          gh api -X DELETE repos/scamarena0823-glitch/Mediousao/contents/.github/workflows/category-filters-fix.yml -f message='Remove temporary category filter workflow' -f sha='$(gh api repos/scamarena0823-glitch/Mediousao/contents/.github/workflows/category-filters-fix.yml --jq .sha)' -f branch=main

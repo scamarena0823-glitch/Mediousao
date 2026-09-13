@@ -58,9 +58,10 @@
   function addBottomNav(){
     if(document.getElementById('mediousaoBottomNav'))return;
     const n=document.createElement('div'); n.id='mediousaoBottomNav';
-    n.style.cssText='position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(480px,100%);height:68px;padding:7px 8px;background:rgba(255,255,255,.98);border-top:1px solid #e5e5e7;display:grid;grid-template-columns:repeat(3,1fr);z-index:50';
-    n.innerHTML='<button data-go="home">⌂<br><small>Casa</small></button><button data-go="upcoming">🕘<br><small>Próximamente</small></button><button data-go="profile">♙<br><small>Perfil</small></button>';
-    n.querySelectorAll('button').forEach(b=>{b.style.cssText='border:0;background:transparent;font-weight:750;font-size:12px';b.onclick=()=>show(b.dataset.go)});
+    n.style.cssText='position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(480px,100%);height:76px;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-top:1px solid #e8e8eb;box-shadow:0 -6px 24px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(4,1fr);z-index:50';
+    n.innerHTML='<button data-go="home" aria-label="Casa"><span class="navIcon">⌂</span><small>Casa</small></button><button data-go="explore" aria-label="Explorar"><span class="navIcon">⌕</span><small>Explorar</small></button><button data-go="upcoming" aria-label="Próximamente"><span class="navIcon">◷</span><small>Próximamente</small></button><button data-go="profile" aria-label="Perfil"><span class="navIcon">♙</span><small>Perfil</small></button>';
+    n.querySelectorAll('button').forEach(b=>{b.style.cssText='border:0;background:transparent;color:#6b6b73;border-radius:14px;font-weight:700;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .2s ease;cursor:pointer';const i=b.querySelector('.navIcon');i.style.cssText='font-size:25px;line-height:25px;font-weight:500';b.querySelector('small').style.cssText='font-size:11px;line-height:14px';b.onclick=()=>show(b.dataset.go)});
+    const active=n.querySelector('[data-go="home"]'); active.style.color='#1677ff'; active.style.background='rgba(22,119,255,.09)';
     document.body.appendChild(n); const old=document.querySelector('body>.app nav'); if(old)old.style.display='none';
   }
   function addPaginationBox(){

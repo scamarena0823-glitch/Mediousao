@@ -21,17 +21,14 @@ jobs:
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
 
-          # Textos de reserva: Próximamente nunca caduca.
           s = s.replace('Reserva por 24 h</span>', 'Reserva sin límite de tiempo</span>')
           s = s.replace('Reserva por 24 horas</h2>', 'Reserva</h2>')
           s = s.replace('La reserva dura 24 horas.</div>', 'La reserva se mantiene sin límite de tiempo.</div>')
 
-          # Al volver a Inicio, forzar una recarga de Próximamente.
           old_show = 'if(id==="cart")document.getElementById("navCart").classList.add("on");\n render();scrollTo(0,0);'
           new_show = 'if(id==="cart")document.getElementById("navCart").classList.add("on");\n render();\n if(id==="home" && typeof loadUpcoming==="function") loadUpcoming();\n scrollTo(0,0);'
           s = s.replace(old_show, new_show)
 
-          # Sustituir completamente loadUpcoming por una versión independiente de la carga normal.
           pattern = r'async function loadUpcoming\(\)\{.*?\n\}\nfunction reserveUpcoming'
           replacement = r'''async function loadUpcoming(){
             const box=document.getElementById("upcomingGrid");
@@ -60,12 +57,12 @@ jobs:
           if n:
               s = s2
 
-          # Cuando ADM marca Próximamente, asegurar que el producto esté publicado (active=true).
-          old_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}"
-          new_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}\n  if(state==='upcoming'){\n    const {error:publishError}=await client.from('products').update({active:true}).eq('id',id);\n    if(publishError){alert('El producto se marcó Próximamente, pero no pudo publicarse: '+publishError.message);return;}\n  }"
-          s = s.replace(old_rpc, new_rpc)
+          marker = "if(state==='upcoming'){"
+          if marker not in s:
+              old_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}"
+              new_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}\n  if(state==='upcoming'){\n    const {error:publishError}=await client.from('products').update({active:true}).eq('id',id);\n    if(publishError){alert('El producto se marcó Próximamente, pero no pudo publicarse: '+publishError.message);return;}\n  }"
+              s = s.replace(old_rpc, new_rpc)
 
-          # La reserva de un producto Próximamente es ilimitada.
           old_alert = 'alert("¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();'
           new_alert = 'alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();'
           s = s.replace(old_alert, new_alert)

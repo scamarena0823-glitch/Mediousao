@@ -17,7 +17,7 @@
 <div id="connection" class="notice">Conectando con el catálogo…</div>
 <div class="section"><h2>Productos</h2><span id="countProducts" class="muted"></span></div>
 <div id="homeGrid" class="grid"></div>
-<section><div class="section"><h2>⏳ Próximamente</h2><span class="muted">Reserva sin límite de tiempo</span></div><div id="upcomingGrid" class="grid"></div></section>
+<section><div class="section"><h2>⏳ Próximamente</h2></div><div id="upcomingGrid" class="grid"></div></section>
 </section>
 
 <section id="catalog" class="screen">
@@ -35,7 +35,7 @@
 <section id="detail" class="screen"><button class="btn" onclick="show('catalog')">← Catálogo</button><div id="detailContent"></div></section>
 
 <section id="reserve" class="screen">
-<button class="btn" onclick="show('detail')">← Producto</button><h2>Reservar por 24 horas</h2><div class="notice">🔒 Al confirmar, el producto queda apartado durante 24 horas y deja de aparecer disponible para otros clientes.</div>
+<button class="btn" onclick="show('detail')">← Producto</button><h2>Reservar</h2>
 <div id="reserveProduct" class="notice"></div>
 <div class="box" style="padding:15px">
 <label>Nombre completo</label><input id="rName" placeholder="Tu nombre"><br><br>
@@ -43,7 +43,7 @@
 <div id="deliveryFields"><label>Sector de Bonao</label><input id="rSector" placeholder="Ej.: Los Transformadores"><br><br><label>Dirección de delivery</label><input id="rAddress" placeholder="Calle, sector y referencia"><br><br>
 <label>Día de delivery</label><input id="rDate" type="date"><br><br>
 <label>Hora de delivery (8:00 AM a 6:00 PM)</label><select id="rTime" class="search"></select></div>
-<div id="pickupFields" style="display:none"><div class="notice">🏪 Pasarás a recoger el producto. La reserva se mantiene sin límite de tiempo.</div></div>
+<div id="pickupFields" style="display:none"><div class="notice">🏪 Pasarás a recoger el producto.</div></div>
 <button id="reserveBtn" class="btn primary full" onclick="submitReservation()">Confirmar reserva</button>
 </div></section>
 
@@ -200,7 +200,7 @@ function reserveUpcoming(id,mode){
   selectedProduct=upcomingProducts.find(p=>p.id===id);
   reserveMode=mode;
   if(!selectedProduct)return;
-  document.getElementById("reserveProduct").innerHTML=`<b>${esc(selectedProduct.name)}</b> · ${money(selectedProduct.price)}<br><span class="muted">⏳ Próximamente · Reserva sin límite de tiempo · ${mode==="delivery"?"🛵 Delivery":"🏪 Recoger"}</span>`;
+  document.getElementById("reserveProduct").innerHTML=`<b>${esc(selectedProduct.name)}</b> · ${money(selectedProduct.price)}<br><span class="muted">⏳ Próximamente · ${mode==="delivery"?"🛵 Delivery":"🏪 Recoger"}</span>`;
   document.getElementById("deliveryFields").style.display=mode==="delivery"?"block":"none";
   document.getElementById("pickupFields").style.display=mode==="pickup"?"block":"none";
   document.getElementById("reserveBtn").textContent=mode==="delivery"?"Confirmar reserva para delivery":"Confirmar reserva para recoger";

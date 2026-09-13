@@ -15,6 +15,11 @@ Marketplace de moda usada y nueva para la **zona inicial de Bonao, República Do
 - El cliente puede cancelar una reserva activa.
 - Estructura preparada para ampliar a otras ciudades posteriormente.
 
+## Estado técnico
+
+- Flujo de publicación de `⏳ Próximamente` reparado para que el producto quede publicado y visible en Inicio.
+- La sección `⏳ Próximamente` se recarga automáticamente al volver a Inicio.
+
 ## Archivos
 
 - `index.html` — aplicación web de MEDIOUSAO.

@@ -17,6 +17,7 @@
 <div id="connection" class="notice">Conectando con el catálogo…</div>
 <div class="section"><h2>Productos</h2><span id="countProducts" class="muted"></span></div>
 <div id="homeGrid" class="grid"></div>
+<section><div class="section"><h2>⏳ Próximamente</h2><span class="muted">Reserva por 24 h</span></div><div id="upcomingGrid" class="grid"></div></section>
 </section>
 
 <section id="catalog" class="screen">
@@ -118,6 +119,7 @@ const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const SERVICE_CITY="Bonao";
 const SERVICE_COUNTRY="República Dominicana";
 let products=[], cart=JSON.parse(localStorage.getItem("mediousao_cart_v1")||"[]"), selectedProduct=null, reserveMode="delivery", fulfillment="delivery";
+let upcomingProducts=[];
 
 const money=n=>"RD$"+Number(n||0).toLocaleString("es-DO");
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
@@ -166,6 +168,26 @@ function times(){let a=[];for(let h=8;h<=18;h++){for(let m of [0,30]){if(h===18&
 function fillTimes(id){document.getElementById(id).innerHTML=times().map(t=>`<option>${t}</option>`).join("")}
 function setFulfillment(mode){fulfillment=mode;document.getElementById("fulfillDelivery").classList.toggle("on",mode==="delivery");document.getElementById("fulfillPickup").classList.toggle("on",mode==="pickup");document.getElementById("checkoutDelivery").style.display=mode==="delivery"?"block":"none";document.getElementById("checkoutPickup").style.display=mode==="pickup"?"block":"none"}
 function startCheckout(){if(!cart.length)return;document.getElementById("checkoutTotal").textContent=money(cart.reduce((s,x)=>s+Number(products.find(p=>p.id===x.id).price)*x.qty,0));fillTimes("deliveryTime");document.getElementById("deliveryDate").min=new Date().toISOString().slice(0,10);document.getElementById("deliveryDate").value=new Date().toISOString().slice(0,10);show("checkout")}
+
+async function loadUpcoming(){
+  const box=document.getElementById("upcomingGrid");
+  if(!box)return;
+  const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("city",SERVICE_CITY).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});
+  if(error){console.error(error);box.innerHTML="<div class='notice'>No pudimos cargar Próximamente.</div>";return;}
+  upcomingProducts=data||[];
+  box.innerHTML=upcomingProducts.map(p=>{const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`}).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
+}
+function reserveUpcoming(id,mode){
+  selectedProduct=upcomingProducts.find(p=>p.id===id);
+  reserveMode=mode;
+  if(!selectedProduct)return;
+  document.getElementById("reserveProduct").innerHTML=`<b>${esc(selectedProduct.name)}</b> · ${money(selectedProduct.price)}<br><span class="muted">⏳ Próximamente · Reserva por 24 horas · ${mode==="delivery"?"🛵 Delivery":"🏪 Recoger"}</span>`;
+  document.getElementById("deliveryFields").style.display=mode==="delivery"?"block":"none";
+  document.getElementById("pickupFields").style.display=mode==="pickup"?"block":"none";
+  document.getElementById("reserveBtn").textContent=mode==="delivery"?"Confirmar reserva para delivery":"Confirmar reserva para recoger";
+  if(mode==="delivery"){fillTimes("rTime");const today=new Date().toISOString().slice(0,10);document.getElementById("rDate").min=today;document.getElementById("rDate").value=today}
+  show("reserve");
+}
 
 async function loadProducts(){
  try{
@@ -324,7 +346,7 @@ async function updateOrderStatus(id,status){
   await loadAdminOrders();
 }
 
-saveCart();loadProducts();
+saveCart();loadProducts();loadUpcoming();
 </script>
 </body>
 </html>

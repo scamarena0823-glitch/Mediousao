@@ -13,7 +13,7 @@
   }
   function cardFixed(p){
     const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);
-    return `<div class="card"><div class="photo" onclick="detail('${p.id}')">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">${esc(labelType(p))} · ${esc(labelAudience(p))}</div><div class="tag">${esc(p.category)} · Talla ${esc(p.size)} · ${esc(p.condition)}</div><div class="price">${money(p.price)}</div><button class="btn primary full" onclick="add('${p.id}')">COMPRAR</button></div></div>`;
+    return `<div class="card"><div class="photo" onclick="detail('${p.id}')">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">${esc(labelType(p))} · ${esc(labelAudience(p))}</div><div class="tag">${esc(p.category)} · Talla ${esc(p.size)} · ${esc(p.condition)}</div><div class="price">${money(p.price)}</div><button class="btn primary full" onclick="add('${p.id}');show('cart')">COMPRAR</button><button class="btn full" style="margin-top:8px" onclick="add('${p.id}')">Agregar al Carrito</button></div></div>`;
   }
   window.render=function(){
     const type=(document.getElementById('typeFilter')||{}).value||'';

@@ -1,4 +1,4 @@
-/* MEDIOUSAO ready flow
+/* MEDIOUSAO ready flow v2026-09-13-2
    Admin: marks a reserved upcoming product as received/ready.
    Customer: reserves upcoming with name + phone only, then chooses delivery/pickup after arrival.
 */
@@ -54,7 +54,6 @@
     }catch(e){ alert('No se pudo marcar como listo: '+(e.message||e)); }
   };
 
-  // Customer home: Próximamente shows only "Reservar ahora".
   window.loadUpcoming = async function(){
     const box=document.getElementById('upcomingGrid');
     if(!box)return;
@@ -72,7 +71,6 @@
     }).join('') || '<div class="notice">No hay productos próximos todavía.</div>';
   };
 
-  // Upcoming reservation: collect only name and phone.
   window.reserveUpcoming = function(id){
     window.selectedProduct=upcomingProducts.find(p=>p.id===id);
     window.reserveMode='upcoming';

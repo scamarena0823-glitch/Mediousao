@@ -1,0 +1,34 @@
+name: MEDIOUSAO Explore final cleanup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove legacy Explore filter controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='<!-- MEDIOUSAO EXPLORE FINAL CLEANUP -->'
+          if marker not in s:
+              css='<style id="mediousao-explore-final-cleanup">#catalog>.filters{display:none!important}#catalog select{display:none!important}#typeFilter,#audienceFilter,#categoryFilter{display:none!important}#mediousaoCategoryFilters{display:none!important}</style>'
+              js='<script>(function(){function c(){var x=document.getElementById("mediousaoCategoryFilters");if(x)x.remove();document.querySelectorAll("#catalog>.filters,#catalog select,#typeFilter,#audienceFilter,#categoryFilter").forEach(function(e){e.style.setProperty("display","none","important")})}c();new MutationObserver(c).observe(document.documentElement,{childList:true,subtree:true});})();</script>'
+              s=s.replace('</head>',css+js+marker+'</head>',1)
+              p.write_text(s,encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Final cleanup Explore filters'
+          git push

@@ -557,7 +557,7 @@ setInterval(checkReservedOrder,15000);
 checkReservedOrder();
 </script>
 
-<script src="ready-flow.js?v=20260913-42"></script>
+<script src="ready-flow.js?v=20260913-12"></script>
 
 <script id="mediousao-category-filter-script">(function(){function init(){var catalog=document.getElementById('catalog');if(!catalog||document.getElementById('mediousaoCategoryFilters'))return;var box=document.createElement('div');box.id='mediousaoCategoryFilters';var items=[['Todos','',''],['Usado','used',''],['Nuevo','new',''],['Hombre','','men'],['Mujer','','women'],['Niño','','kids']];items.forEach(function(x,i){var b=document.createElement('button');b.type='button';b.textContent=x[0];if(i===0)b.className='active';b.onclick=function(){var t=document.getElementById('typeFilter'),a=document.getElementById('audienceFilter');if(t)t.value=x[1];if(a)a.value=x[2];box.querySelectorAll('button').forEach(function(z){z.classList.remove('active')});b.classList.add('active');if(typeof window.render==='function')window.render()};box.appendChild(b)});var grid=document.getElementById('grid');if(grid)catalog.insertBefore(box,grid);else catalog.appendChild(box)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();new MutationObserver(init).observe(document.body,{childList:true,subtree:true})})();</script>
 

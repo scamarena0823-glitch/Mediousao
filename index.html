@@ -17,7 +17,7 @@
 <div id="connection" class="notice">Conectando con el catálogo…</div>
 <div class="section"><h2>Productos</h2><span id="countProducts" class="muted"></span></div>
 <div id="homeGrid" class="grid"></div>
-<section><div class="section"><h2>⏳ Próximamente</h2><span class="muted">Reserva por 24 h</span></div><div id="upcomingGrid" class="grid"></div></section>
+<section><div class="section"><h2>⏳ Próximamente</h2><span class="muted">Reserva sin límite de tiempo</span></div><div id="upcomingGrid" class="grid"></div></section>
 </section>
 
 <section id="catalog" class="screen">
@@ -43,7 +43,7 @@
 <div id="deliveryFields"><label>Sector de Bonao</label><input id="rSector" placeholder="Ej.: Los Transformadores"><br><br><label>Dirección de delivery</label><input id="rAddress" placeholder="Calle, sector y referencia"><br><br>
 <label>Día de delivery</label><input id="rDate" type="date"><br><br>
 <label>Hora de delivery (8:00 AM a 6:00 PM)</label><select id="rTime" class="search"></select></div>
-<div id="pickupFields" style="display:none"><div class="notice">🏪 Pasarás a recoger el producto. La reserva dura 24 horas.</div></div>
+<div id="pickupFields" style="display:none"><div class="notice">🏪 Pasarás a recoger el producto. La reserva se mantiene sin límite de tiempo.</div></div>
 <button id="reserveBtn" class="btn primary full" onclick="submitReservation()">Confirmar reserva</button>
 </div></section>
 
@@ -102,7 +102,7 @@
     <div id="adminProducts"></div>
   </div>
 
-  <div class="box" style="padding:16px;margin-bottom:14px"><div class="row"><h2>⏳ Próximamente</h2><button class="btn" onclick="loadUpcomingAdmin()">Actualizar</button></div><div class="notice">Marca aquí los productos que todavía no están disponibles. Aparecerán en Inicio como “⏳ Próximamente” y podrán reservarse por 24 horas.</div><div id="adminUpcomingProducts"></div></div>
+  <div class="box" style="padding:16px;margin-bottom:14px"><div class="row"><h2>⏳ Próximamente</h2><button class="btn" onclick="loadUpcomingAdmin()">Actualizar</button></div><div class="notice">Marca aquí los productos que todavía no están disponibles. Aparecerán en Inicio como “⏳ Próximamente” y podrán reservarse sin límite de tiempo.</div><div id="adminUpcomingProducts"></div></div>
 
   <div class="box" style="padding:16px">
     <div class="row"><h2>Pedidos</h2><button class="btn" onclick="loadAdminOrders()">Actualizar</button></div>
@@ -393,5 +393,6 @@ async function loadUpcomingAdmin(){
   el.innerHTML=data.map(p=>'<div class="box" style="padding:12px;margin:8px 0"><div class="row"><strong>'+esc(p.name||'Sin nombre')+'</strong><span>⏳</span></div><div id="upcoming-actions-'+p.id+'" class="row" style="gap:8px;margin-top:8px"><button class="btn" onclick="removeUpcoming(\''+p.id+'\')">🔄 Quitar Próximamente</button></div></div>').join('');
 }
 </script>
-</body>
+<div id="reservationCancelSlot" style="margin-top:10px"><button class="btn full" onclick="cancelReservationFromApp()">❌ Cancelar reserva</button></div>
+\n<script id="MEDIOUSAO_RESERVATION_UI_V2">\n(function(){\n  function updateReservationText(){\n    const box=document.getElementById('reserveProduct');\n    if(!box) return;\n    const text=(box.textContent||'').toLowerCase();\n    const upcoming=text.includes('próximamente') || text.includes('proximamente') || text.includes('upcoming');\n    const h=document.querySelector('#reserve h2');\n    if(h) h.textContent=upcoming?'Reservar — Próximamente':'Reservar por 24 horas';\n    const notices=document.querySelectorAll('#reserve .notice');\n    if(notices.length){\n      const n=notices[0];\n      n.textContent=upcoming?'🔒 Al confirmar, el producto queda apartado sin límite de tiempo y deja de aparecer disponible para otros clientes.':'🔒 Al confirmar, el producto queda apartado durante 24 horas y deja de aparecer disponible para otros clientes.';\n    }\n    const pf=document.querySelector('#pickupFields .notice');\n    if(pf) pf.textContent=upcoming?'🏪 Pasarás a recoger el producto. La reserva se mantiene sin límite de tiempo.':'🏪 Pasarás a recoger el producto. La reserva dura 24 horas.';\n  }\n  const start=()=>{\n    updateReservationText();\n    const box=document.getElementById('reserveProduct');\n    if(box) new MutationObserver(updateReservationText).observe(box,{childList:true,subtree:true,characterData:true});\n  };\n  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();\n  window.cancelReservationFromApp=async function(){\n    const phone=(document.getElementById('rPhone')?.value||'').trim();\n    const order=prompt('Escribe el número de reserva, por ejemplo MED-123456');\n    if(!order) return;\n    if(!phone){ alert('Escribe primero el teléfono usado en la reserva.'); return; }\n    const {error}=await client.rpc('cancel_reservation',{p_order_number:order.trim(),p_customer_phone:phone});\n    if(error){ alert('No se pudo cancelar la reserva: '+error.message); return; }\n    alert('Reserva cancelada correctamente. El producto vuelve a estar disponible para otra reserva.');\n    if(typeof render==='function') render();\n    if(typeof show==='function') show('home');\n  };\n})();\n</script>\n</body>
 </html>

@@ -362,25 +362,35 @@ async function setUpcomingState(id,state){
   if(typeof loadUpcoming==='function')await loadUpcoming();
   if(typeof loadUpcomingAdmin==='function')await loadUpcomingAdmin();
 }
+async function removeUpcoming(id){
+  const wrap=document.getElementById('upcoming-actions-'+id);
+  if(wrap)wrap.innerHTML='<button class="btn" onclick="setUpcomingState(\''+id+'\',\'available\')">🟢 Poner disponible</button><button class="btn" onclick="setUpcomingState(\''+id+'\',\'sold\')">🔴 Vendido / no disponible</button>';
+}
 async function loadAdminProducts(){
-  const box=document.getElementById('adminProducts');if(!box)return;
-  box.innerHTML='<div class="muted">Cargando productos…</div>';
+  const el=document.getElementById('adminProducts'); if(!el)return;
   const {data,error}=await client.from('products').select('*').eq('city',SERVICE_CITY).order('created_at',{ascending:false});
-  if(error){box.innerHTML='<div class="error">'+esc(error.message)+'</div>';return;}
-  box.innerHTML=(data||[]).map(p=>{
-    const up=!!p.is_upcoming;
-    const status=up?'<span class="status-pill">⏳ Próximamente</span>':(p.available?'<span class="status-pill green">Disponible</span>':'<span class="status-pill red">Vendido / No disponible</span>');
-    const actions=up
-      ? '<button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'available\')">🟢 Poner disponible</button><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'sold\')">🔴 Marcar vendido / no disponible</button>'
-      : '<button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'upcoming\')">⏳ Marcar Próximamente</button><button class="btn" onclick="setUpcomingState(\''+p.id+'\','+(p.available?'\'sold\'':'\'available\'')+')">'+(p.available?'🔴 Marcar vendido / no disponible':'🟢 Poner disponible')+'</button>';
-    return '<div class="admin-item"><div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+money(p.price)+' · Stock: '+(p.stock??0)+'</div></div>'+status+'</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'+actions+'</div></div>';
-  }).join('')||'<div class="muted">No hay productos.</div>';
+  if(error){el.innerHTML='<div class="notice">Error: '+esc(error.message)+'</div>';return;}
+  if(!data||!data.length){el.innerHTML='<div class="notice">No hay productos.</div>';return;}
+  el.innerHTML=data.map(p=>{
+    const upcoming=!!p.is_upcoming;
+    const available=!!p.available;
+    let actions='';
+    if(upcoming){
+      actions='<div id="upcoming-actions-'+p.id+'" class="row" style="gap:8px;margin-top:8px"><button class="btn" onclick="removeUpcoming(\''+p.id+'\')">🔄 Quitar Próximamente</button></div>';
+    }else if(available){
+      actions='<div class="row" style="gap:8px;margin-top:8px"><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'upcoming\')">⏳ Marcar Próximamente</button><button class="btn danger" onclick="setUpcomingState(\''+p.id+'\',\'sold\')">🔴 Vendido / no disponible</button></div>';
+    }else{
+      actions='<div class="row" style="gap:8px;margin-top:8px"><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'available\')">🟢 Poner disponible</button><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'upcoming\')">⏳ Marcar Próximamente</button></div>';
+    }
+    return '<div class="box" style="padding:12px;margin:8px 0"><div class="row"><strong>'+esc(p.name||'Sin nombre')+'</strong><span class="muted">'+money(p.price||0)+'</span></div><div class="muted">'+(upcoming?'⏳ Próximamente':available?'🟢 Disponible':'🔴 No disponible')+'</div>'+actions+'</div>';
+  }).join('');
 }
 async function loadUpcomingAdmin(){
-  const box=document.getElementById('adminUpcomingProducts');if(!box)return;
+  const el=document.getElementById('adminUpcomingProducts'); if(!el)return;
   const {data,error}=await client.from('products').select('*').eq('city',SERVICE_CITY).eq('is_upcoming',true).order('created_at',{ascending:false});
-  if(error){box.innerHTML='<div class="error">'+esc(error.message)+'</div>';return;}
-  box.innerHTML=(data||[]).map(p=>'<div class="admin-item"><div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+money(p.price)+' · Stock: '+(p.stock??0)+'</div></div><span class="status-pill">⏳ Próximamente</span></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'available\')">🟢 Poner disponible</button><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'sold\')">🔴 Marcar vendido / no disponible</button></div></div>').join('')||'<div class="muted">No hay productos marcados como Próximamente.</div>';
+  if(error){el.innerHTML='<div class="notice">Error: '+esc(error.message)+'</div>';return;}
+  if(!data||!data.length){el.innerHTML='<div class="muted">No hay productos Próximamente.</div>';return;}
+  el.innerHTML=data.map(p=>'<div class="box" style="padding:12px;margin:8px 0"><div class="row"><strong>'+esc(p.name||'Sin nombre')+'</strong><span>⏳</span></div><div id="upcoming-actions-'+p.id+'" class="row" style="gap:8px;margin-top:8px"><button class="btn" onclick="removeUpcoming(\''+p.id+'\')">🔄 Quitar Próximamente</button></div></div>').join('');
 }
 </script>
 </body>

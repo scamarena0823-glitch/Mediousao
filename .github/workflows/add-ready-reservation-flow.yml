@@ -1,86 +1,9 @@
 name: Add ready reservation flow
 on:
-  push:
-    paths:
-      - '.github/workflows/add-ready-reservation-flow.yml'
   workflow_dispatch:
-permissions:
-  contents: write
+
 jobs:
-  patch:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Patch MEDIOUSAO
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text()
-          marker='<!-- MEDIOUSAO_READY_RESERVATION_FLOW -->'
-          if marker in s:
-              print('Already patched')
-              raise SystemExit(0)
-          inject=r'''<!-- MEDIOUSAO_READY_RESERVATION_FLOW -->
-          <script>
-          const READY_STATUSES=['ready','confirmed'];
-          let readyOrder=null;
-          async function checkReservedOrder(){
-            const id=localStorage.getItem('mediousao_order_id');
-            if(!id)return;
-            const {data,error}=await client.from('orders').select('id,order_number,status,fulfillment_method,delivery_date,delivery_time,delivery_address,delivery_sector,total').eq('id',id).maybeSingle();
-            if(error||!data)return;
-            if(data.status==='ready'){
-              readyOrder=data;
-              showReadyNotice(data);
-            }
-          }
-          function showReadyNotice(o){
-            let n=document.getElementById('readyNotice');
-            if(!n){
-              n=document.createElement('div'); n.id='readyNotice'; n.className='notice';
-              const main=document.querySelector('main'); if(main)main.prepend(n);
-            }
-            n.innerHTML=`<b>🎉 Tu producto ya está disponible.</b><br><span class="muted">Pedido ${esc(o.order_number)}. Elige cómo quieres recibirlo.</span><div class="choices" style="margin-top:10px"><button class="choice" onclick="scheduleReady('delivery')">🛵 Programar delivery</button><button class="choice" onclick="scheduleReady('pickup')">🏪 Programar para recoger</button></div>`;
-          }
-          function scheduleReady(mode){
-            if(!readyOrder)return;
-            const old=document.getElementById('readySchedule'); if(old)old.remove();
-            const wrap=document.createElement('div'); wrap.id='readySchedule'; wrap.className='box'; wrap.style.cssText='padding:15px;margin:12px 0';
-            wrap.innerHTML=`<h2>Programar ${mode==='delivery'?'delivery':'recogida'}</h2>${mode==='delivery'?'<label>Sector de Bonao</label><input id="readySector" placeholder="Ej.: Los Transformadores"><br><br><label>Dirección</label><input id="readyAddress" placeholder="Calle, sector y referencia"><br><br>':''}<label>Día</label><input id="readyDate" type="date"><br><br><label>Hora (8:00 AM a 6:00 PM)</label><select id="readyTime" class="search"></select><button class="btn primary full" style="margin-top:12px" onclick="saveReadySchedule('${mode}')">Confirmar programación</button>`;
-            const main=document.querySelector('main'); if(main)main.prepend(wrap);
-            fillTimes('readyTime');
-            const d=new Date().toISOString().slice(0,10); document.getElementById('readyDate').min=d; document.getElementById('readyDate').value=d;
-            if(mode==='pickup')document.getElementById('readyTime').previousElementSibling?.remove();
-          }
-          async function saveReadySchedule(mode){
-            if(!readyOrder)return;
-            const date=document.getElementById('readyDate')?.value||null;
-            const time=document.getElementById('readyTime')?.value||null;
-            const sector=mode==='delivery'?(document.getElementById('readySector')?.value.trim()||null):null;
-            const address=mode==='delivery'?(document.getElementById('readyAddress')?.value.trim()||null):'Recoger en punto de entrega';
-            if(!date||!time)return alert('Selecciona día y hora.');
-            if(mode==='delivery'&&(!sector||!address))return alert('Completa el sector y la dirección de Bonao.');
-            const {error}=await client.from('orders').update({fulfillment_method:mode,delivery_date:date,delivery_time:time,delivery_sector:sector,delivery_address:address,status:'confirmed'}).eq('id',readyOrder.id);
-            if(error){alert('No se pudo programar: '+error.message);return;}
-            readyOrder={...readyOrder,fulfillment_method:mode,delivery_date:date,delivery_time:time,delivery_sector:sector,delivery_address:address,status:'confirmed'};
-            alert('✅ Programación confirmada.');
-            const box=document.getElementById('readySchedule'); if(box)box.remove();
-            const n=document.getElementById('readyNotice'); if(n)n.innerHTML='<b>✅ Tu programación quedó confirmada.</b><br><span class="muted">Te contactaremos para coordinar.</span>';
-          }
-          setInterval(checkReservedOrder,15000);
-          checkReservedOrder();
-          </script>
-          '''
-          anchor='</body>'
-          if anchor not in s: raise SystemExit('Missing body anchor')
-          s=s.replace(anchor, inject+'\n'+anchor, 1)
-          p.write_text(s)
-          PY
-      - name: Commit patch
-        run: |
-          git config user.name 'MEDIOUSAO Bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add index.html
-          git diff --cached --quiet || git commit -m 'Add ready product notification and scheduling UI'
-          git push
+      - run: echo "Legacy workflow disabled."

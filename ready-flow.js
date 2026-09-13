@@ -41,9 +41,15 @@
   function addBottomNav(){
     if(document.getElementById('mediousaoBottomNav'))return;
     const n=document.createElement('div'); n.id='mediousaoBottomNav';
-    n.style.cssText='position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(480px,100%);height:68px;padding:7px 8px;background:rgba(255,255,255,.98);border-top:1px solid #e5e5e7;display:grid;grid-template-columns:repeat(3,1fr);z-index:50';
-    n.innerHTML='<button data-go="home">⌂<br><small>Casa</small></button><button data-go="upcoming">🕘<br><small>Próximamente</small></button><button data-go="profile">♙<br><small>Perfil</small></button>';
-    n.querySelectorAll('button').forEach(b=>{b.style.cssText='border:0;background:transparent;font-weight:750;font-size:12px';b.onclick=()=>show(b.dataset.go)});
+    n.style.cssText='position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(480px,100%);height:78px;padding:7px 8px;background:rgba(255,255,255,.98);border-top:1px solid #e5e5e7;display:grid;grid-template-columns:repeat(4,1fr);z-index:50';
+    n.innerHTML='<button data-go="home" class="active"><span>🏠</span><small>Casa</small></button><button data-go="explore"><span>🔎</span><small>Explorar</small></button><button data-go="upcoming"><span>🕘</span><small>Próximamente</small></button><button data-go="profile"><span>👤</span><small>Perfil</small></button>';
+    n.querySelectorAll('button').forEach(b=>{
+      b.style.cssText='border:0;background:transparent;font-weight:750;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#8a8a8f';
+      b.querySelector('span').style.fontSize='25px';
+      b.querySelector('small').style.fontSize='12px';
+      if(b.classList.contains('active'))b.style.color='#2f80ed';
+      b.onclick=()=>{n.querySelectorAll('button').forEach(x=>{x.classList.remove('active');x.style.color='#8a8a8f'});b.classList.add('active');b.style.color='#2f80ed';show(b.dataset.go)};
+    });
     document.body.appendChild(n); const old=document.querySelector('body>.app nav'); if(old)old.style.display='none';
   }
   function cleanHome(){

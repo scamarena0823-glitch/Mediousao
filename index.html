@@ -353,27 +353,36 @@ saveCart();loadProducts();loadUpcoming();
 </script>
 <!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->
 <script>
-window.toggleUpcoming = async function(id, value){
-  const {error}=await client.from('products').update({is_upcoming:value}).eq('id',id);
-  if(error){ alert('No se pudo actualizar: '+error.message); return; }
-  await window.loadAdminProducts();
-  if(typeof loadUpcomingAdmin==='function') await loadUpcomingAdmin();
-  if(typeof loadUpcoming==='function') await loadUpcoming();
-};
-window.loadAdminProducts = async function(){
-  const box=document.getElementById('adminProducts');
-  if(!box) return;
-  box.innerHTML='Cargando productos…';
+async function setUpcomingState(id,state){
+  const patch=state==='upcoming'?{is_upcoming:true,available:false}:{is_upcoming:false,available:state==='available'};
+  const {error}=await client.from('products').update(patch).eq('id',id);
+  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}
+  const msg=document.getElementById('adminMsg');
+  if(msg){msg.className='notice';msg.textContent=state==='upcoming'?'Producto marcado como Próximamente. ⏳':state==='available'?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
+  await loadAdminProducts();
+  if(typeof loadUpcoming==='function')await loadUpcoming();
+  if(typeof loadUpcomingAdmin==='function')await loadUpcomingAdmin();
+}
+async function loadAdminProducts(){
+  const box=document.getElementById('adminProducts');if(!box)return;
+  box.innerHTML='<div class="muted">Cargando productos…</div>';
   const {data,error}=await client.from('products').select('*').eq('city',SERVICE_CITY).order('created_at',{ascending:false});
   if(error){box.innerHTML='<div class="error">'+esc(error.message)+'</div>';return;}
-  if(!data?.length){box.innerHTML='<div class="notice">No hay productos.</div>';return;}
-  box.innerHTML=data.map(p=>{
-    const upcoming=!!p.is_upcoming;
-    const status=upcoming?'<span class="status-pill">⏳ Próximamente</span>':(p.active?'<span class="status-pill green">Disponible</span>':'<span class="status-pill red">Oculto</span>');
-    return `<div class="admin-item"><div class="row"><div><b>${esc(p.name)}</b><div class="muted">${money(p.price)} · Stock: ${p.stock??0}</div></div>${status}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" onclick="toggleUpcoming('${p.id}',${!upcoming})">${upcoming?'Quitar Próximamente':'⏳ Marcar Próximamente'}</button><button class="btn" onclick="${p.active?'markProductUnavailable':'markProductAvailable'}('${p.id}')">${p.active?'Marcar no disponible':'Publicar'}</button></div></div>`;
-  }).join('');
-};
+  box.innerHTML=(data||[]).map(p=>{
+    const up=!!p.is_upcoming;
+    const status=up?'<span class="status-pill">⏳ Próximamente</span>':(p.available?'<span class="status-pill green">Disponible</span>':'<span class="status-pill red">Vendido / No disponible</span>');
+    const actions=up
+      ? '<button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'available\')">🟢 Poner disponible</button><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'sold\')">🔴 Marcar vendido / no disponible</button>'
+      : '<button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'upcoming\')">⏳ Marcar Próximamente</button><button class="btn" onclick="setUpcomingState(\''+p.id+'\','+(p.available?'\'sold\'':'\'available\'')+')">'+(p.available?'🔴 Marcar vendido / no disponible':'🟢 Poner disponible')+'</button>';
+    return '<div class="admin-item"><div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+money(p.price)+' · Stock: '+(p.stock??0)+'</div></div>'+status+'</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'+actions+'</div></div>';
+  }).join('')||'<div class="muted">No hay productos.</div>';
+}
+async function loadUpcomingAdmin(){
+  const box=document.getElementById('adminUpcomingProducts');if(!box)return;
+  const {data,error}=await client.from('products').select('*').eq('city',SERVICE_CITY).eq('is_upcoming',true).order('created_at',{ascending:false});
+  if(error){box.innerHTML='<div class="error">'+esc(error.message)+'</div>';return;}
+  box.innerHTML=(data||[]).map(p=>'<div class="admin-item"><div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+money(p.price)+' · Stock: '+(p.stock??0)+'</div></div><span class="status-pill">⏳ Próximamente</span></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'available\')">🟢 Poner disponible</button><button class="btn" onclick="setUpcomingState(\''+p.id+'\',\'sold\')">🔴 Marcar vendido / no disponible</button></div></div>').join('')||'<div class="muted">No hay productos marcados como Próximamente.</div>';
+}
 </script>
-
 </body>
 </html>

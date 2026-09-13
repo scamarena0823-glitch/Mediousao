@@ -1,4 +1,4 @@
-/* MEDIOUSAO UI v2026-09-13-22 */
+/* MEDIOUSAO UI v2026-09-13-23 */
 (function(){
   function hideBonaoEverywhere(){
     document.querySelectorAll('body *').forEach(el=>{
@@ -7,6 +7,16 @@
       if(!/bonao/i.test(t))return;
       if(t.length<220){el.style.setProperty('display','none','important');}
     });
+  }
+  function removeHeaderSearch(){
+    const header=document.querySelector('header');
+    if(!header)return;
+    header.querySelectorAll('input,textarea').forEach(el=>el.remove());
+    header.querySelectorAll('.search,.search-box,.searchbar,.toolbar').forEach(el=>{
+      if(!el.id || el.id==='search') el.remove();
+    });
+    const search=document.getElementById('search');
+    if(search)search.remove();
   }
   function hideHomeExtras(){
     const home=document.getElementById('home');
@@ -30,16 +40,13 @@
       if(!t)return;
       if(t.includes('catálogo conectado a mediousao') || t.includes('catalogo conectado a mediousao') || t.includes('solo disponible en bonao') || t.includes('disponible en bonao') || (t.includes('bonao') && (t.includes('servicio disponible') || t.includes('solo procesa') || t.includes('funcionando') || t.includes('exclusivamente en bonao'))))el.style.setProperty('display','none','important');
     });
-    document.querySelectorAll('body:has(#home.active) input[type="search"],body:has(#home.active) input[placeholder*="buscar" i],body:has(#home.active) input[placeholder*="tenis" i]').forEach(el=>{
-      (el.closest('form,.search,.search-box,.searchbar,.toolbar')||el).style.setProperty('display','none','important');
-    });
-    const search=document.getElementById('search');
-    if(search) search.style.setProperty('display','none','important');
+    removeHeaderSearch();
+    document.querySelectorAll('body:has(#home.active) input[type="search"],body:has(#home.active) input[placeholder*="Buscar" i],body:has(#home.active) input[placeholder*="buscar" i],body:has(#home.active) input[placeholder*="Tenis" i]').forEach(el=>el.remove());
     hideBonaoEverywhere();
   }
   function inject(){
-    if(document.getElementById('mediousao-ui-v22'))return;
-    const style=document.createElement('style');style.id='mediousao-ui-v22';style.textContent=`
+    if(document.getElementById('mediousao-ui-v23'))return;
+    const style=document.createElement('style');style.id='mediousao-ui-v23';style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}
       header .sub,header .brandline{display:none!important}
@@ -63,13 +70,15 @@
       #homeGrid .card img{display:block!important;width:100%!important;aspect-ratio:1/1!important;object-fit:cover!important}
       #homeGrid .card .card-body,#homeGrid .card .info,#homeGrid .card .details{padding-top:9px!important}
       #homeGrid .card button,#homeGrid .card a{display:none!important}
+      header input,header textarea,header .search,header .search-box,header .searchbar,header .toolbar{display:none!important}
       #search{display:none!important}
       body:has(#home.active) input[type="search"],body:has(#home.active) input[placeholder*="Buscar" i],body:has(#home.active) input[placeholder*="buscar" i],body:has(#home.active) input[placeholder*="Tenis" i],body:has(#home.active) .search,body:has(#home.active) .search-box,body:has(#home.active) .searchbar,body:has(#home.active) form:has(input[type="search"]){display:none!important}
       #home input[type="search"],#home input[placeholder*="Buscar" i],#home input[placeholder*="buscar" i],#home input[placeholder*="Tenis" i],#home .search,#home .search-box,#home .searchbar{display:none!important}
       #home [id*="connection" i],#home [class*="connection" i]{display:none!important}
       .app > .notice,.app .location-notice,.app .bonao-notice,[class*="bonao" i],[id*="bonao" i]{display:none!important}
     `;document.head.appendChild(style);
-    const obs=new MutationObserver(()=>{hideHomeExtras();hideBonaoEverywhere()});obs.observe(document.body,{childList:true,subtree:true});
+    const obs=new MutationObserver(()=>{hideHomeExtras();hideBonaoEverywhere()});
+    obs.observe(document.body,{childList:true,subtree:true});
     hideHomeExtras();hideBonaoEverywhere();
     const header=document.querySelector('header');
     if(header&&!document.getElementById('mediousaoTopCart')){const cart=document.createElement('button');cart.id='mediousaoTopCart';cart.setAttribute('aria-label','Carrito');cart.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.4L20 8H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg><span class="cart-badge"></span>';cart.onclick=function(){if(typeof window.show==='function')window.show('cart')};header.appendChild(cart)}

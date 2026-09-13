@@ -20,22 +20,30 @@ jobs:
           marker='<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->'
           if marker in s:
               s=s[:s.index(marker)]
-          block='''<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->
+          block=r'''<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->
           <script>
-          async function toggleUpcoming(id, value){
-            if(value){
-              const {error}=await client.from('products').update({is_upcoming:true,available:false}).eq('id',id);
-              if(error){alert('No se pudo marcar Próximamente: '+error.message);return;}
-              const msg=document.getElementById('adminMsg'); if(msg){msg.className='notice';msg.textContent='Producto marcado como Próximamente. ✅';}
-            }else{
-              const makeAvailable=confirm('Producto retirado de Próximamente.\\n\\nPulsa Aceptar para PONERLO DISPONIBLE.\\nPulsa Cancelar para marcarlo como VENDIDO / NO DISPONIBLE.');
-              const {error}=await client.from('products').update({is_upcoming:false,available:makeAvailable}).eq('id',id);
-              if(error){alert('No se pudo actualizar: '+error.message);return;}
-              const msg=document.getElementById('adminMsg'); if(msg){msg.className='notice';msg.textContent=makeAvailable?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
-            }
+          async function setUpcomingState(id, state){
+            const patch = state === 'upcoming' ? {is_upcoming:true, available:false} : {is_upcoming:false, available:state === 'available'};
+            const {error}=await client.from('products').update(patch).eq('id',id);
+            if(error){alert('No se pudo actualizar el producto: '+error.message);return false;}
+            const msg=document.getElementById('adminMsg');
+            if(msg){msg.className='notice';msg.textContent=state==='upcoming'?'Producto marcado como Próximamente. ⏳':state==='available'?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
             await loadAdminProducts();
             if(typeof loadUpcoming==='function') await loadUpcoming();
             if(typeof loadUpcomingAdmin==='function') await loadUpcomingAdmin();
+            return true;
+          }
+          async function removeUpcoming(id){
+            const choice=prompt('Escribe DISPONIBLE para ponerlo disponible o VENDIDO para dejarlo vendido/no disponible.');
+            if(!choice)return;
+            const value=choice.trim().toLowerCase();
+            if(value==='disponible') await setUpcomingState(id,'available');
+            else if(value==='vendido') await setUpcomingState(id,'sold');
+            else alert('Opción no válida. Escribe DISPONIBLE o VENDIDO.');
+          }
+          async function toggleUpcoming(id, value){
+            if(value) await setUpcomingState(id,'upcoming');
+            else await removeUpcoming(id);
           }
           async function loadAdminProducts(){
             const box=document.getElementById('adminProducts'); if(!box)return;
@@ -45,14 +53,17 @@ jobs:
             box.innerHTML=(data||[]).map(p=>{
               const upcoming=!!p.is_upcoming;
               const status=upcoming?"<span class='status-pill'>⏳ Próximamente</span>":(p.available?"<span class='status-pill green'>Disponible</span>":"<span class='status-pill red'>Vendido / No disponible</span>");
-              return `<div class='admin-item'><div class='row'><div><b>${esc(p.name)}</b><div class='muted'>${money(p.price)} · Stock: ${p.stock??0}</div></div>${status}</div><div style='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap'>${upcoming?`<button class='btn' onclick="toggleUpcoming('${p.id}',false)">↩️ Quitar Próximamente</button>`:`<button class='btn' onclick="toggleUpcoming('${p.id}',true)">⏳ Marcar Próximamente</button>`}${!upcoming?`<button class='btn' onclick="toggleAvailable('${p.id}',${!p.available})">${p.available?'Marcar no disponible':'Marcar disponible'}</button>`:''}</div></div>`;
+              const actions=upcoming
+                ? `<button class='btn' onclick="removeUpcoming('${p.id}')">↩️ Quitar Próximamente</button>`
+                : `<button class='btn' onclick="setUpcomingState('${p.id}','upcoming')">⏳ Marcar Próximamente</button><button class='btn' onclick="setUpcomingState('${p.id}',${p.available?'\'sold\'':'\'available\''})">${p.available?'🔴 Marcar vendido / no disponible':'🟢 Poner disponible'}</button>`;
+              return `<div class='admin-item'><div class='row'><div><b>${esc(p.name)}</b><div class='muted'>${money(p.price)} · Stock: ${p.stock??0}</div></div>${status}</div><div style='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap'>${actions}</div></div>`;
             }).join('') || "<div class='muted'>No hay productos.</div>";
           }
           async function loadUpcomingAdmin(){
             const box=document.getElementById('adminUpcomingProducts'); if(!box)return;
             const {data,error}=await client.from('products').select('*').eq('city',SERVICE_CITY).eq('is_upcoming',true).order('created_at',{ascending:false});
             if(error){box.innerHTML="<div class='error'>"+esc(error.message)+"</div>";return;}
-            box.innerHTML=(data||[]).map(p=>`<div class='admin-item'><b>${esc(p.name)}</b><div class='muted'>${money(p.price)} · Stock: ${p.stock??0}</div><button class='btn' style='margin-top:8px' onclick="toggleUpcoming('${p.id}',false)">↩️ Quitar Próximamente</button></div>`).join('') || "<div class='muted'>No hay productos marcados como Próximamente.</div>";
+            box.innerHTML=(data||[]).map(p=>`<div class='admin-item'><div class='row'><div><b>${esc(p.name)}</b><div class='muted'>${money(p.price)} · Stock: ${p.stock??0}</div></div><span class='status-pill'>⏳ Próximamente</span></div><button class='btn' style='margin-top:8px' onclick="removeUpcoming('${p.id}')">↩️ Quitar Próximamente</button></div>`).join('') || "<div class='muted'>No hay productos marcados como Próximamente.</div>";
           }
           </script>
           </body>
@@ -66,5 +77,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Repair Próximamente per product flow"
+          git commit -m "Fix per-product Próximamente controls"
           git push

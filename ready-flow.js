@@ -54,7 +54,17 @@
     const up=document.querySelector('#home>section:has(#upcomingGrid)'); if(up)up.style.display='none';
     const conn=document.getElementById('connection'); if(conn)conn.style.display='none';
     document.querySelectorAll('#homeGrid .card button').forEach(b=>b.style.display='block');
+    document.querySelectorAll('.app>.notice').forEach(el=>{
+      const t=(el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+      if(t.includes('servicio disponible exclusivamente en bonao')) el.style.display='none';
+    });
+    document.querySelectorAll('#homeGrid,#grid').forEach(g=>{
+      g.style.display='grid';
+      g.style.gridTemplateColumns='repeat(2,minmax(0,1fr))';
+      g.style.gap='13px';
+      g.style.width='100%';
+    });
   }
-  function start(){cleanHome();loadProducts();if(typeof loadUpcoming==='function')loadUpcoming();setTimeout(cleanHome,300);}
+  function start(){cleanHome();loadProducts();if(typeof loadUpcoming==='function')loadUpcoming();setTimeout(cleanHome,300);setTimeout(cleanHome,1000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();

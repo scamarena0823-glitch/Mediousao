@@ -19,17 +19,46 @@ jobs:
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
 
+          # Inicio: Upcoming debe anunciar reserva ilimitada.
           s=s.replace('Reserva por 24 h</span>', 'Reserva sin límite de tiempo</span>')
-          s=s.replace('Marca aquí los productos que todavía no están disponibles. Aparecerán en Inicio como “⏳ Próximamente” y podrán reservarse por 24 horas.', 'Marca aquí los productos que todavía no están disponibles. Aparecerán en Inicio como “⏳ Próximamente” y podrán reservarse sin límite de tiempo.')
-          s=s.replace('Marca aquí los productos que todavía no están disponibles. Aparecerán en Inicio como “⏳ Próximamente” y podrán reservarse por 24 horas.', 'Marca aquí los productos que todavía no están disponibles. Aparecerán en Inicio como “⏳ Próximamente” y podrán reservarse sin límite de tiempo.')
           s=s.replace('Reserva por 24 horas</h2>', 'Reserva</h2>')
           s=s.replace('La reserva dura 24 horas.</div>', 'La reserva se mantiene sin límite de tiempo.</div>')
 
-          if 'MEDIOUSAO_RESERVATION_UI_V2' not in s:
-              block=r'''\n<script id="MEDIOUSAO_RESERVATION_UI_V2">\n(function(){\n  function updateReservationText(){\n    const box=document.getElementById('reserveProduct');\n    if(!box) return;\n    const text=(box.textContent||'').toLowerCase();\n    const upcoming=text.includes('próximamente') || text.includes('proximamente') || text.includes('upcoming');\n    const h=document.querySelector('#reserve h2');\n    if(h) h.textContent=upcoming?'Reservar — Próximamente':'Reservar por 24 horas';\n    const notices=document.querySelectorAll('#reserve .notice');\n    if(notices.length){\n      const n=notices[0];\n      n.textContent=upcoming?'🔒 Al confirmar, el producto queda apartado sin límite de tiempo y deja de aparecer disponible para otros clientes.':'🔒 Al confirmar, el producto queda apartado durante 24 horas y deja de aparecer disponible para otros clientes.';\n    }\n    const pf=document.querySelector('#pickupFields .notice');\n    if(pf) pf.textContent=upcoming?'🏪 Pasarás a recoger el producto. La reserva se mantiene sin límite de tiempo.':'🏪 Pasarás a recoger el producto. La reserva dura 24 horas.';\n  }\n  const start=()=>{\n    updateReservationText();\n    const box=document.getElementById('reserveProduct');\n    if(box) new MutationObserver(updateReservationText).observe(box,{childList:true,subtree:true,characterData:true});\n  };\n  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();\n  window.cancelReservationFromApp=async function(){\n    const phone=(document.getElementById('rPhone')?.value||'').trim();\n    const order=prompt('Escribe el número de reserva, por ejemplo MED-123456');\n    if(!order) return;\n    if(!phone){ alert('Escribe primero el teléfono usado en la reserva.'); return; }\n    const {error}=await client.rpc('cancel_reservation',{p_order_number:order.trim(),p_customer_phone:phone});\n    if(error){ alert('No se pudo cancelar la reserva: '+error.message); return; }\n    alert('Reserva cancelada correctamente. El producto vuelve a estar disponible para otra reserva.');\n    if(typeof render==='function') render();\n    if(typeof show==='function') show('home');\n  };\n})();\n</script>\n'''
-              anchor='</body>'
-              s=s.replace(anchor, '<div id="reservationCancelSlot" style="margin-top:10px"><button class="btn full" onclick="cancelReservationFromApp()">❌ Cancelar reserva</button></div>\n'+anchor)
-              s=s.replace(anchor, block+anchor)
+          # ADM: usar el RPC seguro para cambiar el estado del producto.
+          old='''async function toggleUpcomingAdmin(id,val){
+  const {error}=await client.from("products").update({is_upcoming:val}).eq("id",id);
+  if(error){alert("No se pudo actualizar: "+error.message);return;}
+  await loadUpcomingAdmin();
+  if(typeof loadUpcoming==='function') await loadUpcoming();
+  if(typeof loadAdminProducts==='function') await loadAdminProducts();
+}'''
+          new='''async function toggleUpcomingAdmin(id,val){
+  const state=val?'upcoming':'available';
+  const {error}=await client.rpc("admin_set_product_state",{p_product_id:id,p_state:state});
+  if(error){alert("No se pudo actualizar: "+error.message);return;}
+  await loadUpcomingAdmin();
+  if(typeof loadUpcoming==='function') await loadUpcoming();
+  if(typeof loadAdminProducts==='function') await loadAdminProducts();
+}'''
+          s=s.replace(old,new)
+
+          # Al marcar desde la lista principal, también usar el RPC seguro.
+          if 'MEDIOUSAO_UPCOMING_RPC_V3' not in s:
+              block=r'''<script id="MEDIOUSAO_UPCOMING_RPC_V3">
+(function(){
+  window.setUpcomingState=async function(id,state){
+    const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});
+    if(error){alert('No se pudo actualizar el producto: '+error.message);return;}
+    const msg=document.getElementById('adminMsg');
+    if(msg){msg.className='notice';msg.textContent=state==='upcoming'?'Producto marcado como Próximamente. ⏳':state==='available'?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
+    if(typeof loadAdminProducts==='function') await loadAdminProducts();
+    if(typeof loadUpcomingAdmin==='function') await loadUpcomingAdmin();
+    if(typeof loadUpcoming==='function') await loadUpcoming();
+  };
+})();
+</script>
+'''
+              s=s.replace('</body>',block+'</body>')
 
           p.write_text(s,encoding='utf-8')
           PY
@@ -38,5 +67,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Improve upcoming reservation UI"
+          git diff --cached --quiet || git commit -m "Fix upcoming product publishing flow"
           git push

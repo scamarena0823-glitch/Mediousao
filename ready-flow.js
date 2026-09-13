@@ -1,7 +1,10 @@
-/* MEDIOUSAO UI v2026-09-13-17 */
+/* MEDIOUSAO UI v2026-09-13-18 */
 (function(){
   function hideHomeExtras(){
     const home=document.getElementById('home');
+    const homeActive=!!(home&&home.classList.contains('active'));
+    const globalBonao=document.querySelector('.app > .notice');
+    if(globalBonao && homeActive) globalBonao.style.setProperty('display','none','important');
     if(!home)return;
     ['#connection','.notice','.location-notice','.bonao-notice'].forEach(sel=>{
       home.querySelectorAll(sel).forEach(el=>el.style.setProperty('display','none','important'));
@@ -20,9 +23,9 @@
     });
   }
   function inject(){
-    if(document.getElementById('mediousao-ui-v17'))return;
+    if(document.getElementById('mediousao-ui-v18'))return;
     const style=document.createElement('style');
-    style.id='mediousao-ui-v17';
+    style.id='mediousao-ui-v18';
     style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}
@@ -49,6 +52,8 @@
       #homeGrid .card button,#homeGrid .card a{display:none!important}
       #home input[type="search"],#home input[placeholder*="Buscar" i],#home input[placeholder*="buscar" i],#home input[placeholder*="Tenis" i],#home .search,#home .search-box,#home .searchbar{display:none!important}
       #home [id*="connection" i],#home [class*="connection" i]{display:none!important}
+      /* Aviso de Bonao: se muestra fuera de Casa, nunca en la pantalla de inicio */
+      .app > .notice{display:none!important}
     `;
     document.head.appendChild(style);
     const obs=new MutationObserver(()=>hideHomeExtras());

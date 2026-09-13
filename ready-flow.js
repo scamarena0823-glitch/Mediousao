@@ -1,4 +1,4 @@
-/* MEDIOUSAO ready flow v2026-09-13-7 */
+/* MEDIOUSAO ready flow v2026-09-13-8 */
 (function(){
   function addAdminAccess(){
     if(document.getElementById('mediousaoAdminAccess'))return;
@@ -31,9 +31,13 @@
   };
   window.reserveUpcoming=window.mediousaoOpenUpcoming;
   window.submitReservation=async function(){
-    const p=window.selectedProduct;if(!p)return; const name=document.getElementById('rName').value.trim(),phone=document.getElementById('rPhone').value.trim(); if(!name||!phone){alert('Completa nombre y teléfono.');return;} if(window.reserveMode!=='upcoming')return;
-    const {data,error}=await client.rpc('reserve_product',{p_product_id:p.id,p_customer_name:name,p_customer_phone:phone,p_fulfillment_method:'pickup',p_delivery_address:null,p_delivery_date:null,p_delivery_time:null,p_delivery_sector:null,p_city:'Bonao'});
-    if(error){alert('No se pudo guardar la reserva. Inténtalo de nuevo.');console.error(error);return;} const row=data&&data[0];if(row&&row.order_number){localStorage.setItem('mediousao_last_reservation',JSON.stringify({order_id:row.order_id,order_number:row.order_number,phone}));localStorage.setItem('mediousao_order_id',row.order_id);} alert('💚 ¡Reserva realizada! Te notificaremos cuando tu producto esté disponible.');if(typeof window.show==='function')window.show('home');
+    const p=window.selectedProduct;if(!p){alert('No hay producto seleccionado.');return;}
+    const name=document.getElementById('rName').value.trim(),phone=document.getElementById('rPhone').value.trim(); if(!name||!phone){alert('Completa nombre y teléfono.');return;} if(window.reserveMode!=='upcoming'){alert('Modo de reserva incorrecto.');return;}
+    try{
+      const {data,error}=await client.rpc('reserve_product',{p_product_id:p.id,p_customer_name:name,p_customer_phone:phone,p_fulfillment_method:'pickup',p_delivery_address:null,p_delivery_date:null,p_delivery_time:null,p_delivery_sector:null,p_city:'Bonao'});
+      if(error){console.error('MEDIOUSAO reserve_product error:',error);alert('ERROR SUPABASE: '+(error.message||'sin mensaje')+(error.details?'\nDetalles: '+error.details:'')+(error.hint?'\nAyuda: '+error.hint:''));return;}
+      const row=data&&data[0];if(row&&row.order_number){localStorage.setItem('mediousao_last_reservation',JSON.stringify({order_id:row.order_id,order_number:row.order_number,phone}));localStorage.setItem('mediousao_order_id',row.order_id);} alert('💚 ¡Reserva realizada! Te notificaremos cuando tu producto esté disponible.');if(typeof window.show==='function')window.show('home');
+    }catch(err){console.error('MEDIOUSAO reserve exception:',err);alert('ERROR AL GUARDAR: '+(err?.message||String(err)));}
   };
   const observer=new MutationObserver(forceUpcomingButtons); function start(){addAdminAccess();const box=document.getElementById('upcomingGrid');if(box)observer.observe(box,{childList:true,subtree:true});forceUpcomingButtons();let n=0;const timer=setInterval(function(){forceUpcomingButtons();if(++n>30)clearInterval(timer)},250);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();

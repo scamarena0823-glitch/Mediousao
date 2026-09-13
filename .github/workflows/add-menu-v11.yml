@@ -1,0 +1,96 @@
+name: Add MEDIOUSAO v11 header menu
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  menu-patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch ready-flow.js
+        shell: bash
+        run: |
+          if grep -q 'v11: left hamburger menu' ready-flow.js; then
+            exit 0
+          fi
+          cat >> ready-flow.js <<'EOF'
+
+/* v11: left hamburger menu + centered logo + cart only on the right. */
+(function(){
+  function esc(s){return String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));}
+  function closeMenu(){
+    const overlay=document.getElementById('mediousaoMenuOverlay');
+    if(overlay)overlay.classList.remove('show');
+    const button=document.getElementById('mediousaoMenuButton');
+    if(button){button.textContent='☰';button.setAttribute('aria-label','Abrir menú');}
+  }
+  window.mediousaoCloseMenu=closeMenu;
+  function go(id){closeMenu();if(typeof window.show==='function')window.show(id);}
+  function openOrders(){
+    const panel=document.getElementById('mediousaoMenuPanel');if(!panel)return;
+    let html='<div class="mediousaoMenuHead"><div><b>MEDIOUSAO</b><span>Mis pedidos</span></div><button class="mediousaoClose" onclick="window.mediousaoCloseMenu()">✕</button></div>';
+    const raw=localStorage.getItem('mediousao_last_reservation');
+    if(raw){try{const r=JSON.parse(raw);html+='<div class="notice"><b>Última reserva</b><br>Número: <b>'+esc(r.order_number)+'</b><br><span class="muted">Te notificaremos cuando tu producto esté disponible.</span></div>';}catch(e){}}
+    else html+='<div class="notice">Todavía no tienes pedidos o reservas guardados en este dispositivo.</div>';
+    html+='<button class="btn primary full" style="margin-top:10px" onclick="window.mediousaoCloseMenu()">Cerrar</button>';
+    panel.innerHTML=html;panel.classList.add('show');
+  }
+  function showInfo(){
+    const panel=document.getElementById('mediousaoMenuPanel');if(!panel)return;
+    panel.innerHTML='<div class="mediousaoMenuHead"><div><b>MEDIOUSAO</b><span>Información</span></div><button class="mediousaoClose" onclick="window.mediousaoCloseMenu()">✕</button></div><div class="notice"><b>Estilo real. Precios reales.</b></div><div class="notice">📍 Servicio exclusivamente en <b>Bonao, República Dominicana</b>.</div><div class="notice">💵 Pago contra entrega.<br>🛵 Delivery o 🏪 recoger, según el producto.</div><button class="btn primary full" style="margin-top:10px" onclick="window.mediousaoCloseMenu()">Cerrar</button>';
+    panel.classList.add('show');
+  }
+  function build(){
+    if(document.getElementById('mediousaoMenuButton'))return;
+    const header=document.querySelector('header'),app=document.querySelector('.app');if(!header||!app)return;
+    const menu=document.createElement('button');menu.id='mediousaoMenuButton';menu.className='mediousaoTopButton';menu.type='button';menu.textContent='☰';menu.setAttribute('aria-label','Abrir menú');
+    const cart=document.createElement('button');cart.id='mediousaoCartButton';cart.className='mediousaoTopButton cart';cart.type='button';cart.textContent='🛒';cart.setAttribute('aria-label','Abrir carrito');
+    header.appendChild(menu);header.appendChild(cart);
+    const overlay=document.createElement('div');overlay.id='mediousaoMenuOverlay';
+    const panel=document.createElement('div');panel.id='mediousaoMenuPanel';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Menú MEDIOUSAO');
+    panel.innerHTML='<div class="mediousaoMenuHead"><div><b>MEDIOUSAO</b><span>Menú</span></div><button class="mediousaoClose" onclick="window.mediousaoCloseMenu()">✕</button></div>'+\
+      '<button class="mediousaoMenuItem" onclick="window.mediousaoMenuGo(\'home\')">🏠 <span>Inicio</span></button>'+\
+      '<button class="mediousaoMenuItem" onclick="window.mediousaoMenuGo(\'catalog\')">🛍️ <span>Catálogo</span></button>'+\
+      '<button class="mediousaoMenuItem" onclick="window.mediousaoOpenOrders()">📦 <span>Mis pedidos</span></button>'+\
+      '<button class="mediousaoMenuItem" onclick="window.mediousaoMenuGo(\'adminLogin\')">🔐 <span>Administración</span></button>'+\
+      '<button class="mediousaoMenuItem" onclick="window.mediousaoShowInfo()">ℹ️ <span>Información</span></button>';
+    overlay.appendChild(panel);app.appendChild(overlay);
+    menu.onclick=function(){if(overlay.classList.contains('show'))closeMenu();else{overlay.classList.add('show');menu.textContent='✕';menu.setAttribute('aria-label','Cerrar menú');}};
+    cart.onclick=function(){go('cart');};
+    overlay.addEventListener('click',e=>{if(e.target===overlay)closeMenu();});
+    window.mediousaoMenuGo=go;window.mediousaoOpenOrders=openOrders;window.mediousaoShowInfo=showInfo;
+    const oldNav=document.querySelector('nav');if(oldNav)oldNav.style.display='none';
+  }
+  const style=document.createElement('style');style.id='mediousaoMenuStyle';style.textContent=`
+header{position:sticky;z-index:20;min-height:118px}
+header .logo{position:relative;text-align:center;width:100%;padding-top:2px}
+header .sub{text-align:center}
+header .brandline{margin-left:auto;margin-right:auto}
+.mediousaoTopButton{position:absolute;top:18px;left:14px;width:42px;height:42px;border:1px solid #e4e4e7;border-radius:13px;background:#fff;color:#111;font-size:22px;font-weight:900;line-height:1;box-shadow:0 5px 14px rgba(0,0,0,.06);z-index:3}
+.mediousaoTopButton.cart{left:auto;right:14px;font-size:20px}
+.mediousaoTopButton:active{transform:scale(.95)}
+#mediousaoMenuOverlay{position:fixed;inset:0;background:rgba(0,0,0,.38);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;z-index:100}
+#mediousaoMenuOverlay.show{opacity:1;visibility:visible}
+#mediousaoMenuPanel{position:absolute;left:0;top:0;height:100%;width:min(320px,86vw);background:#fff;padding:22px 16px calc(22px + env(safe-area-inset-bottom));box-shadow:14px 0 40px rgba(0,0,0,.18);transform:translateX(-105%);transition:transform .24s ease;overflow:auto}
+#mediousaoMenuOverlay.show #mediousaoMenuPanel{transform:translateX(0)}
+.mediousaoMenuHead{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 20px;border-bottom:1px solid #ededf0;margin-bottom:10px}
+.mediousaoMenuHead b{display:block;font-size:22px;letter-spacing:-1px}.mediousaoMenuHead span{display:block;color:#85868a;font-size:12px;margin-top:3px}
+.mediousaoClose{border:0;background:#f3f3f5;border-radius:12px;width:40px;height:40px;font-size:18px;font-weight:900}
+.mediousaoMenuItem{width:100%;display:flex;align-items:center;gap:13px;text-align:left;border:0;border-bottom:1px solid #f0f0f2;background:#fff;padding:17px 8px;font-size:16px;font-weight:800;color:#17171a}
+.mediousaoMenuItem:active{background:#f7f7f8}.mediousaoMenuItem span{flex:1}
+@media(min-width:481px){#mediousaoMenuOverlay{display:none}}
+`;
+  document.head.appendChild(style);build();
+})();
+EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ready-flow.js
+          git commit -m 'Add MEDIOUSAO v11 hamburger menu and cart'
+          git push

@@ -1,9 +1,9 @@
-/* MEDIOUSAO UI v2026-09-13-13 */
+/* MEDIOUSAO UI v2026-09-13-14 */
 (function(){
   function inject(){
-    if(document.getElementById('mediousao-ui-v13')) return;
+    if(document.getElementById('mediousao-ui-v14')) return;
     const style=document.createElement('style');
-    style.id='mediousao-ui-v13';
+    style.id='mediousao-ui-v14';
     style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}
@@ -19,8 +19,8 @@
       #mediousaoBottomNav .nav-label{line-height:1.05}
       main{padding-bottom:88px!important}
       nav{display:none!important}
-      
-      /* CASA: limpio, solo artículos disponibles con foto e información debajo */
+
+      /* INICIO CASA: solo productos disponibles, foto + informacion */
       #home .hero{display:none!important}
       #home>.section{display:none!important}
       #home>section:has(#upcomingGrid){display:none!important}
@@ -28,12 +28,30 @@
       #homeGrid .card{overflow:hidden!important}
       #homeGrid .card img{display:block!important;width:100%!important;aspect-ratio:1/1!important;object-fit:cover!important}
       #homeGrid .card .card-body,#homeGrid .card .info,#homeGrid .card .details{padding-top:9px!important}
-      #homeGrid .card button{display:none!important}
-      #homeGrid .card a{display:none!important}
-      
-      @media(max-width:380px){header .logo{font-size:29px!important}#mediousaoBottomNav{height:66px}}
+      #homeGrid .card button,#homeGrid .card a{display:none!important}
+
+      /* Ocultar buscador y avisos de ubicacion solamente en Casa */
+      #home input[type="search"],#home input[placeholder*="Buscar" i],#home input[placeholder*="buscar" i],#home .search,#home .search-box,#home .searchbar,#home [class*="search"]{display:none!important}
+      #home .notice,#home .location-notice,#home .bonao-notice{display:none!important}
     `;
     document.head.appendChild(style);
+
+    const cleanHomeText=()=>{
+      const home=document.getElementById('home');
+      if(!home)return;
+      const nodes=home.querySelectorAll('p,div,span,small,label,h2,h3');
+      nodes.forEach(el=>{
+        if(el.closest('#homeGrid'))return;
+        const t=(el.textContent||'').trim().toLowerCase();
+        if(!t)return;
+        if((t.includes('solo')&&t.includes('bonao'))||t.includes('funcionando en bonao')||t.includes('disponible en bonao')||t.includes('área de servicio')||t.includes('area de servicio')){
+          el.style.setProperty('display','none','important');
+        }
+      });
+    };
+    cleanHomeText();
+    const obs=new MutationObserver(()=>cleanHomeText());
+    obs.observe(document.getElementById('home')||document.body,{childList:true,subtree:true});
 
     const header=document.querySelector('header');
     if(header && !document.getElementById('mediousaoTopCart')){

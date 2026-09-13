@@ -136,7 +136,9 @@ function show(id){
  if(id==="home")document.getElementById("navHome").classList.add("on");
  if(id==="catalog")document.getElementById("navCatalog").classList.add("on");
  if(id==="cart")document.getElementById("navCart").classList.add("on");
- render();scrollTo(0,0);
+ render();
+ if(id==="home" && typeof loadUpcoming==="function") loadUpcoming();
+ scrollTo(0,0);
 }
 function labelType(p){return p.item_type==="new"?"Nuevo":"Usado"}
 function labelAudience(p){return ({men:"Hombre",women:"Mujer",kids:"Niño"}[p.audience]||"")}
@@ -175,10 +177,24 @@ function startCheckout(){if(!cart.length)return;document.getElementById("checkou
 async function loadUpcoming(){
   const box=document.getElementById("upcomingGrid");
   if(!box)return;
-  const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});
-  if(error){console.error(error);box.innerHTML="<div class='notice'>No pudimos cargar Próximamente.</div>";return;}
-  upcomingProducts=data||[];
-  box.innerHTML=upcomingProducts.map(p=>{const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`}).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
+  box.innerHTML="<div class='notice'>Cargando Próximamente…</div>";
+  const {data,error}=await client.from("products")
+    .select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city")
+    .eq("city",SERVICE_CITY)
+    .eq("is_upcoming",true)
+    .gt("stock",0)
+    .order("arrival_date",{ascending:true,nullsFirst:false});
+  if(error){
+    console.error("MEDIOUSAO Próximamente:",error);
+    box.innerHTML="<div class='error'>No pudimos cargar Próximamente. Revisa la conexión con Supabase.</div>";
+    return;
+  }
+  upcomingProducts=(data||[]).filter(p=>p.active===true);
+  box.innerHTML=upcomingProducts.map(p=>{
+    const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);
+    const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";
+    return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`;
+  }).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
 }
 function reserveUpcoming(id,mode){
   selectedProduct=upcomingProducts.find(p=>p.id===id);
@@ -356,6 +372,10 @@ saveCart();loadProducts();loadUpcoming();
 async function setUpcomingState(id,state){
   const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});
   if(error){alert('No se pudo actualizar el producto: '+error.message);return;}
+  if(state==='upcoming'){
+    const {error:publishError}=await client.from('products').update({active:true}).eq('id',id);
+    if(publishError){alert('El producto se marcó Próximamente, pero no pudo publicarse: '+publishError.message);return;}
+  }
   const msg=document.getElementById('adminMsg');
   if(msg){msg.className='notice';msg.textContent=state==='upcoming'?'Producto marcado como Próximamente. ⏳':state==='available'?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
   await loadAdminProducts();

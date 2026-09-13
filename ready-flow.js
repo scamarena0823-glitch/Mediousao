@@ -1,4 +1,4 @@
-/* MEDIOUSAO ready flow v2026-09-13-9 */
+/* MEDIOUSAO ready flow v2026-09-13-10 */
 (function(){
   function addAdminAccess(){
     if(document.getElementById('mediousaoAdminAccess'))return;
@@ -82,4 +82,47 @@
         <div id="adminRegularOrders">${regular.map(o=>orderCard(o,false)).join('')||'<div class="notice">No hay pedidos disponibles.</div>'}</div>
       </div>`;
   };
+})();
+
+/* Visual refresh: premium, urban, minimal and mobile-first. No functional changes. */
+(function(){
+  if(document.getElementById('mediousaoVisualRefresh'))return;
+  const style=document.createElement('style');style.id='mediousaoVisualRefresh';style.textContent=`
+:root{--m-red:#e50914;--m-black:#0b0b0d;--m-ink:#151518;--m-soft:#f6f6f7;--m-line:#e8e8eb}
+body{background:#ececee;color:var(--m-ink)}
+.app{background:#fff;box-shadow:0 0 50px rgba(0,0,0,.10)}
+header{padding:20px 18px 15px;border-bottom:1px solid #e8e8eb}
+.logo{font-size:31px;letter-spacing:-1.8px}
+.sub{font-size:12px;letter-spacing:.15px;color:#6f7075}
+.brandline{width:48px;height:4px;margin-top:10px}
+header .search{margin-top:16px;background:#f5f5f6;border-color:#ededf0;border-radius:16px;padding:14px 16px}
+header .search:focus{background:#fff;border-color:#111}
+body>.app> .notice{margin:10px 18px 0!important;border:0;border-radius:14px;background:#f7f7f8;box-shadow:none;padding:11px 13px;font-size:12px}
+main{padding:14px 18px 100px}
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#0b0b0d 0%,#17171a 68%,#2a080b 100%);color:#fff;border:0;border-radius:24px;padding:25px 21px;margin-bottom:20px;box-shadow:0 14px 35px rgba(0,0,0,.16)}
+.hero:after{content:"";position:absolute;width:150px;height:150px;border:1px solid rgba(229,9,20,.55);border-radius:50%;right:-65px;top:-45px;box-shadow:0 0 0 18px rgba(229,9,20,.04),0 0 0 38px rgba(229,9,20,.025)}
+.hero h1{position:relative;z-index:1;font-size:31px;line-height:1.02;letter-spacing:-1.15px;max-width:300px}
+.hero p{position:relative;z-index:1;color:#c9c9cc!important}
+.hero .btn{position:relative;z-index:2;border-radius:14px;margin-top:16px;padding:13px 17px}
+.section{margin:24px 0 12px}
+.section h2{font-size:21px;letter-spacing:-.55px}
+.grid{gap:11px}
+.card{border:1px solid #e9e9ec;border-radius:20px;box-shadow:0 8px 24px rgba(0,0,0,.055)}
+.card .photo{height:175px;background:#f7f7f8}
+.card .info{padding:13px 13px 14px}
+.card .name{font-size:14px;letter-spacing:-.1px}
+.card .tag{font-size:11px;color:#85868a}
+.card .price{font-size:20px;letter-spacing:-.35px;margin:8px 0 10px}
+.card .btn{border-radius:12px;padding:11px 10px;font-size:14px}
+.btn{border-radius:14px;font-weight:850}
+.btn.primary{background:var(--m-red);box-shadow:0 8px 18px rgba(229,9,20,.18)}
+.notice{border-color:var(--m-line);border-radius:16px;background:#fafafa;box-shadow:none}
+.filters select{border-color:#e5e5e8;border-radius:14px;padding:12px;background:#fafafa}
+.choices .choice{border-radius:14px;padding:13px}
+nav{padding-top:10px;border-top:1px solid #e5e5e8;box-shadow:0 -8px 24px rgba(0,0,0,.045)}
+nav button{font-size:11px;letter-spacing:.1px}
+nav .on{font-weight:900}
+.detailphoto{height:330px;border-radius:22px;background:#f7f7f8}
+@media(max-width:380px){.card .photo{height:150px}.hero h1{font-size:28px}.logo{font-size:29px}}
+`;document.head.appendChild(style);
 })();

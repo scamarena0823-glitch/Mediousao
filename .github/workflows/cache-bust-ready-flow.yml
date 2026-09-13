@@ -9,19 +9,20 @@ permissions:
 
 jobs:
   cache-bust:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Update ready-flow cache version
         shell: bash
         run: |
-          if grep -q 'ready-flow.js?v=20260913-1' index.html; then
-            sed -i 's/ready-flow.js?v=20260913-1/ready-flow.js?v=20260913-4/' index.html
+          if grep -q 'ready-flow.js?v=' index.html; then
+            sed -i -E 's/ready-flow\.js\?v=[^"'"'"']+/ready-flow.js?v=20260913-7/' index.html
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
             git add index.html
-            git commit -m 'Cache-bust MEDIOUSAO ready flow'
-            git push
-          else
-            echo 'Cache version already updated; no changes needed.'
+            if ! git diff --cached --quiet; then
+              git commit -m 'Cache-bust MEDIOUSAO ready flow'
+              git push
+            fi
           fi

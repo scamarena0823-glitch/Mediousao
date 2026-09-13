@@ -1,8 +1,8 @@
-/* MEDIOUSAO UI v2026-09-13-16 */
+/* MEDIOUSAO UI v2026-09-13-17 */
 (function(){
   function hideHomeExtras(){
     const home=document.getElementById('home');
-    if(!home || !home.classList.contains('active'))return;
+    if(!home)return;
     ['#connection','.notice','.location-notice','.bonao-notice'].forEach(sel=>{
       home.querySelectorAll(sel).forEach(el=>el.style.setProperty('display','none','important'));
     });
@@ -11,7 +11,7 @@
       const t=(el.textContent||'').trim().toLowerCase();
       if(!t)return;
       if(t.includes('catálogo conectado a mediousao') || t.includes('catalogo conectado a mediousao') ||
-         (t.includes('bonao') && (t.includes('servicio disponible') || t.includes('solo procesa') || t.includes('funcionando')))){
+         (t.includes('bonao') && (t.includes('servicio disponible') || t.includes('solo procesa') || t.includes('funcionando') || t.includes('exclusivamente en bonao')))){
         el.style.setProperty('display','none','important');
       }
     });
@@ -20,9 +20,9 @@
     });
   }
   function inject(){
-    if(document.getElementById('mediousao-ui-v16'))return;
+    if(document.getElementById('mediousao-ui-v17'))return;
     const style=document.createElement('style');
-    style.id='mediousao-ui-v16';
+    style.id='mediousao-ui-v17';
     style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}

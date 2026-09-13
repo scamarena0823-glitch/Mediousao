@@ -22,8 +22,7 @@ jobs:
           block='''<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->
           <script>
           async function setUpcomingState(id,state){
-            const patch=state==='upcoming'?{is_upcoming:true,available:false}:{is_upcoming:false,available:state==='available'};
-            const {error}=await client.from('products').update(patch).eq('id',id);
+            const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});
             if(error){alert('No se pudo actualizar el producto: '+error.message);return;}
             const msg=document.getElementById('adminMsg');
             if(msg){msg.className='notice';msg.textContent=state==='upcoming'?'Producto marcado como Próximamente. ⏳':state==='available'?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
@@ -61,5 +60,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Fix Próximamente per-product controls"
+          git diff --cached --quiet || git commit -m "Use secure ADM RPC for product state controls"
           git push

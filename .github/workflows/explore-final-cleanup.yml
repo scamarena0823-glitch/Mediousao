@@ -19,18 +19,22 @@ jobs:
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
+          # Remove the old script that recreates Todos/Usado/Nuevo/Hombre/Mujer/Niño.
+          start=s.find('<script id="mediousao-category-filter-script">')
+          if start != -1:
+              end=s.find('</script>', start)
+              if end != -1:
+                  s=s[:start]+s[end+9:]
           marker='<!-- MEDIOUSAO EXPLORE FINAL CLEANUP -->'
           if marker not in s:
               css='<style id="mediousao-explore-final-cleanup">#catalog>.filters{display:none!important}#catalog select{display:none!important}#typeFilter,#audienceFilter,#categoryFilter{display:none!important}#mediousaoCategoryFilters{display:none!important}</style>'
-              js='<script>(function(){function c(){var x=document.getElementById("mediousaoCategoryFilters");if(x)x.remove();document.querySelectorAll("#catalog>.filters,#catalog select,#typeFilter,#audienceFilter,#categoryFilter").forEach(function(e){e.style.setProperty("display","none","important")})}c();new MutationObserver(c).observe(document.documentElement,{childList:true,subtree:true});})();</script>'
+              js='<script>(function(){function c(){var x=document.getElementById("mediousaoCategoryFilters");if(x)x.remove();document.querySelectorAll("#catalog>.filters,#catalog select,#typeFilter,#audienceFilter,#categoryFilter").forEach(function(e){e.style.setProperty("display","none","important")});document.querySelectorAll("#catalog button,#catalog a").forEach(function(e){var t=(e.textContent||"").replace(/\\s+/g," ").trim().toLowerCase();if(["todos","usado","nuevo","hombre","mujer","niño","niña","inicio","categoría","categoria","catálogo"].includes(t))e.remove()})}c();new MutationObserver(c).observe(document.documentElement,{childList:true,subtree:true});})();</script>'
               s=s.replace('</head>',css+js+marker+'</head>',1)
-              p.write_text(s,encoding='utf-8')
+          p.write_text(s,encoding='utf-8')
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Final cleanup Explore filters'
+          git commit -m 'Remove legacy Explore filter script'
           git push
-
-# Trigger cleanup verification

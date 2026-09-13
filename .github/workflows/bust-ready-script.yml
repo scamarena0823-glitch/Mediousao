@@ -1,0 +1,34 @@
+name: Bust MEDIOUSAO ready script cache
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update ready-flow cache version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('ready-flow.js?v=20260913-1', 'ready-flow.js?v=20260913-4')
+          s = s.replace('ready-flow.js?v=20260913-2', 'ready-flow.js?v=20260913-4')
+          s = s.replace('ready-flow.js?v=20260913-3', 'ready-flow.js?v=20260913-4')
+          p.write_text(s, encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Bust ready-flow script cache'
+          git push

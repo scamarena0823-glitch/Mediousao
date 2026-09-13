@@ -35,14 +35,14 @@ jobs:
             if(!box)return;
             box.innerHTML="<div class='notice'>Cargando Próximamente…</div>";
             const {data,error}=await client.from("products")
-              .select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city")
+              .select("*")
               .eq("city",SERVICE_CITY)
               .eq("is_upcoming",true)
               .gt("stock",0)
-              .order("arrival_date",{ascending:true,nullsFirst:false});
+              .order("created_at",{ascending:false});
             if(error){
               console.error("MEDIOUSAO Próximamente:",error);
-              box.innerHTML="<div class='error'>No pudimos cargar Próximamente. Revisa la conexión con Supabase.</div>";
+              box.innerHTML=`<div class='error'>No pudimos cargar Próximamente.<br><small>${esc(error.message||error)}</small></div>`;
               return;
             }
             upcomingProducts=(data||[]).filter(p=>p.active===true);
@@ -53,9 +53,9 @@ jobs:
             }).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
           }
           function reserveUpcoming'''
-          s2, n = re.subn(pattern, replacement, s, flags=re.S)
-          if n:
-              s = s2
+          s, n = re.subn(pattern, replacement, s, flags=re.S)
+          if not n:
+              raise SystemExit('No se encontró loadUpcoming para reemplazar')
 
           marker = "if(state==='upcoming'){"
           if marker not in s:
@@ -75,5 +75,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Fix Próximamente visibility and publishing"
+          git diff --cached --quiet || git commit -m "Make Próximamente query robust"
           git push

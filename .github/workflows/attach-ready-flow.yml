@@ -9,25 +9,89 @@ permissions:
 
 jobs:
   attach:
-    if: ${{ contains(github.event.head_commit.message, 'Attach ready flow') && !contains(github.event.head_commit.message, '[skip ready flow]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[skip ready flow]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Attach ready-flow.js to index.html
+      - name: Update Próximamente reservation flow
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          tag = '<script src="ready-flow.js"></script>'
-          if tag not in s:
-              s = s.replace('</body>', tag + '\n</body>')
-              p.write_text(s, encoding='utf-8')
-          else:
-              print('ready-flow.js already attached')
+
+          old = '''const action=reserved
+      ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`
+      : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button>`;'''
+          new = '''const action=reserved
+      ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`
+      : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}')">Reservar ahora</button>`;'''
+          if old in s:
+              s = s.replace(old, new, 1)
+
+          # Upcoming reservation starts with name + phone only.
+          pattern = r'function reserveUpcoming\(id,mode\)\{.*?\n\}\n\nasync function loadProducts\(\)'
+          replacement = '''function reserveUpcoming(id){
+  selectedProduct=upcomingProducts.find(p=>p.id===id);
+  reserveMode="upcoming";
+  if(!selectedProduct)return;
+  document.getElementById("reserveProduct").innerHTML=`<b>${esc(selectedProduct.name)}</b> · ${money(selectedProduct.price)}<br><span class="muted">⏳ Próximamente · Te notificaremos cuando esté disponible.</span>`;
+  document.getElementById("deliveryFields").style.display="none";
+  document.getElementById("pickupFields").style.display="none";
+  document.getElementById("reserveBtn").textContent="Reservar ahora";
+  show("reserve");
+}
+
+async function loadProducts()'''
+          s, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('No se encontró reserveUpcoming')
+
+          # Reservation form hides delivery/pickup fields until product is ready.
+          s = s.replace('<div id="deliveryFields"><label>Sector de Bonao</label>', '<div id="deliveryFields" style="display:none"><label>Sector de Bonao</label>', 1)
+
+          # Replace reservation submit function with upcoming-aware behavior.
+          start = s.find('async function submitReservation(){')
+          if start == -1:
+              raise SystemExit('No se encontró submitReservation')
+          end = s.find('\n}\n', start)
+          if end == -1:
+              raise SystemExit('No se encontró fin de submitReservation')
+          end += 2
+          fn = '''async function submitReservation(){
+ if(!selectedProduct)return;
+ if(SERVICE_CITY!=="Bonao")return alert("MEDIOUSAO está configurada exclusivamente para Bonao.");
+ const name=document.getElementById("rName").value.trim(),phone=document.getElementById("rPhone").value.trim();
+ if(!name||!phone)return alert("Completa nombre y teléfono.");
+ if(reserveMode==="upcoming"){
+   const {data,error}=await client.rpc("reserve_product",{p_product_id:selectedProduct.id,p_customer_name:name,p_customer_phone:phone,p_fulfillment_method:"pickup",p_delivery_address:null,p_delivery_date:null,p_delivery_time:null,p_delivery_sector:null,p_city:SERVICE_CITY});
+   if(error){alert("No se pudo guardar la reserva. Inténtalo de nuevo.");console.error(error);return}
+   const row=data&&data[0];
+   if(row&&row.order_number) localStorage.setItem("mediousao_last_reservation",JSON.stringify({order_id:row.order_id,order_number:row.order_number,phone}));
+   alert("💚 ¡Reserva realizada! Te notificaremos cuando tu producto esté disponible.");
+   show("home");
+   loadUpcoming();
+   return;
+ }
+ const address=reserveMode==="delivery"?document.getElementById("rAddress").value.trim():null;
+ const sector=reserveMode==="delivery"?document.getElementById("rSector").value.trim():null;
+ if(reserveMode==="delivery"&&!address)return alert("Completa la dirección de delivery.");
+ if(reserveMode==="delivery"&&!sector)return alert("Completa el sector de Bonao.");
+ const deliveryDate=reserveMode==="delivery"?document.getElementById("rDate").value:null,deliveryTime=reserveMode==="delivery"?document.getElementById("rTime").value:null;
+ const {data,error}=await client.rpc("reserve_product",{p_product_id:selectedProduct.id,p_customer_name:name,p_customer_phone:phone,p_fulfillment_method:reserveMode,p_delivery_address:address,p_delivery_sector:sector,p_delivery_date:deliveryDate,p_delivery_time:deliveryTime,p_city:SERVICE_CITY});
+ if(error){alert("No se pudo guardar la reserva.");console.error(error);return}
+ const row=data&&data[0];
+ if(row&&row.order_number) localStorage.setItem("mediousao_last_reservation",JSON.stringify({order_id:row.order_id,order_number:row.order_number,phone}));
+ alert("💚 ¡Reserva realizada!");
+ show("home");
+ loadUpcoming();
+}'''
+          s = s[:start] + fn + s[end:]
+          p.write_text(s, encoding='utf-8')
           PY
 
       - name: Commit and push
@@ -39,6 +103,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
           else
-            git commit -m 'Attach ready flow to MEDIOUSAO [skip ready flow]'
+            git commit -m 'Fix Próximamente Reservar ahora [skip ready flow]'
             git push
           fi

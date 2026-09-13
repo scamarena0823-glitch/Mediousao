@@ -75,3 +75,4 @@ Antes de poner la app en producción, revisa también las políticas **RLS (Row 
 <!-- unlimited reservation text fix -->
 <!-- simplify upcoming reservation text -->
 <!-- reserved state + availability notification -->
+<!-- menu-v11-trigger -->

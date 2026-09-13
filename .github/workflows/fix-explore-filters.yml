@@ -1,0 +1,69 @@
+name: Fix Explore Filters
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-explore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Explore UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''<div class="filters">
+          <select id="typeFilter" onchange="render()"><option value="">Usados y nuevos</option><option value="used">Usados</option><option value="new">Nuevos</option></select>
+          <select id="audienceFilter" onchange="render()"><option value="">Hombre, mujer y niño</option><option value="men">Hombre</option><option value="women">Mujer</option><option value="kids">Niño</option></select>
+          </div>
+          <div class="filters">
+          <select id="categoryFilter" onchange="render()"><option value="">Todos</option><option value="sneakers">Tenis</option><option value="clothes">Ropa</option><option value="accessories">Accesorios</option></select>
+          </div>'''
+
+          new = '''<div id="mediousaoExploreCategories" aria-label="Categorías">
+          <button type="button" data-category="clothes">Ropa</button>
+          <button type="button" data-category="sneakers">Calzado</button>
+          <button type="button" data-category="accessories">Accesorios</button>
+          </div>
+          <select id="categoryFilter" style="display:none" aria-hidden="true">
+            <option value="">Todas</option><option value="sneakers">Calzado</option><option value="clothes">Ropa</option><option value="accessories">Accesorios</option>
+          </select>'''
+
+          if old in s:
+              s = s.replace(old, new, 1)
+          else:
+              s = re.sub(r'<div class="filters">\s*<select id="typeFilter".*?</div>\s*<div class="filters">\s*<select id="categoryFilter".*?</div>', new, s, count=1, flags=re.S)
+
+          marker = '<style id="mediousao-category-filters">'
+          start = s.find(marker)
+          if start != -1:
+              end = s.find('</style>', start)
+              if end != -1:
+                  end += len('</style>')
+                  replacement = '''<style id="mediousao-category-filters">#mediousaoExploreCategories{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 16px}#mediousaoExploreCategories button{border:1px solid #e1e2e6;background:#fff;border-radius:13px;min-height:48px;padding:8px 5px;font-size:14px;font-weight:800;color:#222;box-shadow:0 3px 10px rgba(0,0,0,.04)}#mediousaoExploreCategories button.active{background:#111;color:#fff;border-color:#111}@media(max-width:380px){#mediousaoExploreCategories{gap:6px}#mediousaoExploreCategories button{font-size:13px}}</style>'''
+                  s = s[:start] + replacement + s[end:]
+
+          script = '''\n<script id="mediousao-explore-category-script">\n(function(){\n  function setup(){\n    const wrap=document.getElementById('mediousaoExploreCategories');\n    const select=document.getElementById('categoryFilter');\n    if(!wrap||!select)return;\n    const buttons=wrap.querySelectorAll('button[data-category]');\n    function choose(value){\n      select.value=value;\n      buttons.forEach(b=>b.classList.toggle('active',b.dataset.category===value));\n      if(typeof render==='function')render();\n    }\n    buttons.forEach(b=>b.onclick=()=>choose(b.dataset.category));\n    if(!select.value)buttons[0]?.classList.add('active');\n  }\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();\n})();\n</script>\n'''
+          if 'id="mediousao-explore-category-script"' not in s:
+              s = s.replace('</body>', script + '</body>', 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Fix Explore categories: Ropa, Calzado, Accesorios"
+          git push

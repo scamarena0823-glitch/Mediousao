@@ -12,63 +12,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Repair Próximamente visibility and reservation text
+      - name: Ajustar texto de reservas Próximamente
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          s = s.replace('Reserva por 24 h</span>', 'Reserva sin límite de tiempo</span>')
-          s = s.replace('Reserva por 24 horas</h2>', 'Reserva</h2>')
-          s = s.replace('La reserva dura 24 horas.</div>', 'La reserva se mantiene sin límite de tiempo.</div>')
-          s = s.replace('⏳ Próximamente · Reserva por 24 horas ·', '⏳ Próximamente · Reserva sin límite de tiempo ·')
-          s = s.replace('⏳ Próximamente · Reserva por 24 h ·', '⏳ Próximamente · Reserva sin límite de tiempo ·')
-          old_show = 'if(id==="cart")document.getElementById("navCart").classList.add("on");\n render();scrollTo(0,0);'
-          new_show = 'if(id==="cart")document.getElementById("navCart").classList.add("on");\n render();\n if(id==="home" && typeof loadUpcoming==="function") loadUpcoming();\n scrollTo(0,0);'
-          s = s.replace(old_show, new_show)
-          pattern = r'async function loadUpcoming\(\)\{.*?\n\}\nfunction reserveUpcoming'
-          replacement = r'''async function loadUpcoming(){
-            const box=document.getElementById("upcomingGrid");
-            if(!box)return;
-            box.innerHTML="<div class='notice'>Cargando Próximamente…</div>";
-            const {data,error}=await client.from("products")
-              .select("*")
-              .eq("city",SERVICE_CITY)
-              .eq("is_upcoming",true)
-              .gt("stock",0)
-              .order("created_at",{ascending:false});
-            if(error){
-              console.error("MEDIOUSAO Próximamente:",error);
-              box.innerHTML=`<div class='error'>No pudimos cargar Próximamente.<br><small>${esc(error.message||error)}</small></div>`;
-              return;
-            }
-            upcomingProducts=(data||[]).filter(p=>p.active===true);
-            box.innerHTML=upcomingProducts.map(p=>{
-              const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);
-              const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";
-              return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`;
-            }).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
-          }
-          function reserveUpcoming'''
-          s, n = re.subn(pattern, replacement, s, flags=re.S)
-          if not n:
-              raise SystemExit('No se encontró loadUpcoming para reemplazar')
-          marker = "if(state==='upcoming'){"
-          if marker not in s:
-              old_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}"
-              new_rpc = "const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});\n  if(error){alert('No se pudo actualizar el producto: '+error.message);return;}\n  if(state==='upcoming'){\n    const {error:publishError}=await client.from('products').update({active:true}).eq('id',id);\n    if(publishError){alert('El producto se marcó Próximamente, pero no pudo publicarse: '+publishError.message);return;}\n  }"
-              s = s.replace(old_rpc, new_rpc)
-          old_alert = 'alert("¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();'
-          new_alert = 'alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();'
-          s = s.replace(old_alert, new_alert)
+          s = s.replace('<span class="muted">Reserva sin límite de tiempo</span>', '')
+          s = s.replace('<span class="muted">Reserva por 24 h</span>', '')
+          s = s.replace('<h2>Reservar por 24 horas</h2>', '<h2>Reservar</h2>')
+          s = s.replace('<div class="notice">🔒 Al confirmar, el producto queda apartado durante 24 horas y deja de aparecer disponible para otros clientes.</div>', '')
+          s = s.replace('<div class="notice">🔒 Al confirmar, el producto queda apartado sin límite de tiempo y deja de aparecer disponible para otros clientes.</div>', '')
+          s = s.replace('<div class="notice">🏪 Pasarás a recoger el producto. La reserva se mantiene sin límite de tiempo.</div>', '<div class="notice">🏪 Pasarás a recoger el producto.</div>')
+          s = s.replace('⏳ Próximamente · Reserva por 24 horas ·', '⏳ Próximamente ·')
+          s = s.replace('⏳ Próximamente · Reserva por 24 h ·', '⏳ Próximamente ·')
+          s = s.replace('⏳ Próximamente · Reserva sin límite de tiempo ·', '⏳ Próximamente ·')
           p.write_text(s, encoding='utf-8')
-          print('Patched index.html')
+          print('Texto de Próximamente ajustado: solo Reservar')
           PY
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Fix unlimited upcoming reservation text"
+          git diff --cached --quiet || git commit -m "Simplify upcoming reservation text"
           git push

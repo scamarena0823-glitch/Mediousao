@@ -1,6 +1,6 @@
 /* MEDIOUSAO UI + CATALOGO FIX v2026-09-13 */
 (function(){
-  const PAGE_SIZE=8;
+  const PAGE_SIZE=20;
   let currentPage=1;
   function removeSearch(){
     const header=document.querySelector('header');
@@ -22,7 +22,6 @@
     if(currentPage>pages)currentPage=pages;
     const box=document.getElementById('mediousaoPagination');
     if(!box)return;
-    box.style.display=pages>1?'flex':'none';
     box.style.cssText='display:'+(pages>1?'flex':'none')+';justify-content:center;align-items:center;gap:12px;padding:22px 8px 90px;width:100%';
     box.innerHTML=`<button ${currentPage===1?'disabled':''} data-page="prev" style="border:1px solid #ddd;border-radius:10px;background:#fff;padding:10px 16px;font-weight:700">‹ Anterior</button><span style="font-weight:700">Página ${currentPage} de ${pages}</span><button ${currentPage===pages?'disabled':''} data-page="next" style="border:1px solid #ddd;border-radius:10px;background:#fff;padding:10px 16px;font-weight:700">Siguiente ›</button>`;
     box.querySelector('[data-page="prev"]').onclick=()=>{if(currentPage>1){currentPage--;render();window.scrollTo({top:0,behavior:'smooth'})}};

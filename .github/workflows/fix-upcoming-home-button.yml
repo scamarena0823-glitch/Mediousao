@@ -1,32 +1,9 @@
-name: Fix Próximamente home button
+name: Fix upcoming home button
 on:
-  push:
-    paths-ignore:
-      - 'index.html'
-permissions:
-  contents: write
+  workflow_dispatch:
+
 jobs:
-  fix:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Update Próximamente button
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-          old = '''const action=reserved\n    ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`\n    : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button>`;'''
-          new = '''const action=reserved\n    ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`\n    : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">Reservar ahora</button>`;'''
-          if old not in s:
-              raise SystemExit('Target snippet not found; no changes made.')
-          p.write_text(s.replace(old, new, 1), encoding='utf-8')
-          PY
-      - name: Commit change
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          git diff --cached --quiet && exit 0
-          git commit -m 'Show only Reservar ahora on Próximamente'
-          git push
+      - run: echo "Legacy workflow disabled."

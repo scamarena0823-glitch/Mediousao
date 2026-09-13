@@ -1,0 +1,35 @@
+name: Remove cancel reservation control
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove cancel reservation control
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '/* MEDIOUSAO: remove cancel reservation control v2 */'
+          if marker not in s:
+              style = '''\n<style>\n/* MEDIOUSAO: remove cancel reservation control v2 */\n#reservationCancelSlot, #reservationCancel, .reservationCancel, .reservation-cancel, [id*="reservationCancel"], [class*="reservationCancel"] { display:none!important; }\n</style>\n<script>\n(function(){\n  function hide(){\n    document.querySelectorAll('button,a,div,section').forEach(function(el){\n      var t=(el.textContent||'').replace(/\\s+/g,' ').trim().toLowerCase();\n      if(t === '❌ cancelar reserva' || t === 'cancelar reserva' || t.indexOf('cancelar reserva') === 0){\n        if(el.id !== 'mediousaoBottomNav' && !el.closest('#mediousaoBottomNav')) el.style.display='none';\n      }\n    });\n  }\n  hide();\n  new MutationObserver(hide).observe(document.body,{childList:true,subtree:true});\n  setInterval(hide,1000);\n})();\n</script>\n'''
+              s = s.replace('</head>', style + '</head>', 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'Remove cancel reservation control from customer view'
+            git push
+          fi

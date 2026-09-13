@@ -1,82 +1,10 @@
-name: Fix Próximamente per product
+name: Próximamente controls
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
-  patch:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Patch index.html
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-
-          # Make the Supabase CDN script valid so the app JavaScript executes.
-          bad='<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">'
-          good='<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n<script>'
-          if bad in s and good not in s:
-              s=s.replace(bad, good, 1)
-
-          # Replace the previous Próximamente override with a reliable per-product control.
-          marker='<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->'
-          if marker in s:
-              s=s[:s.index(marker)]
-          block='''<!-- MEDIOUSAO_UPCOMING_PER_PRODUCT -->
-<script>
-window.toggleUpcoming = async function(id, value){
-  const msg=document.getElementById('adminMsg');
-  const {error}=await client.from('products').update({is_upcoming:value}).eq('id',id);
-  if(error){
-    if(msg){msg.className='error';msg.textContent='No se pudo cambiar Próximamente: '+error.message;}
-    alert('No se pudo cambiar Próximamente: '+error.message);
-    return;
-  }
-  if(msg){msg.className='notice';msg.textContent=value?'Producto marcado como Próximamente. ✅':'Producto quitado de Próximamente. ✅';}
-  await loadAdminProducts();
-  if(typeof loadUpcoming==='function') await loadUpcoming();
-  if(typeof loadUpcomingAdmin==='function') await loadUpcomingAdmin();
-};
-
-window.loadAdminProducts = async function(){
-  const box=document.getElementById('adminProducts');
-  if(!box)return;
-  box.innerHTML="<div class='muted'>Cargando productos…</div>";
-  const {data,error}=await client.from('products').select('*').eq('city',SERVICE_CITY).order('created_at',{ascending:false});
-  if(error){box.innerHTML="<div class='error'>No se pudieron cargar los productos: "+esc(error.message)+"</div>";return;}
-  box.innerHTML=(data||[]).map(p=>{
-    const upcoming=!!p.is_upcoming;
-    const status=upcoming?"<span class='status-pill'>⏳ Próximamente</span>":(p.available?"<span class='status-pill green'>Disponible</span>":"<span class='status-pill red'>No disponible</span>");
-    return `<div class='admin-item'><div class='row'><div><b>${esc(p.name)}</b><div class='muted'>${money(p.price)} · Stock: ${p.stock??0}</div></div>${status}</div><div style='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap'><button class='btn' onclick="toggleUpcoming('${p.id}',${!upcoming})">${upcoming?'↩️ Quitar Próximamente':'⏳ Marcar Próximamente'}</button><button class='btn' onclick="toggleAvailable('${p.id}',${!p.available})">${p.available?'Marcar no disponible':'Marcar disponible'}</button></div></div>`;
-  }).join('') || "<div class='muted'>No hay productos.</div>";
-};
-
-window.loadUpcomingAdmin = async function(){
-  const box=document.getElementById('adminUpcomingProducts');
-  if(!box)return;
-  const {data,error}=await client.from('products').select('*').eq('city',SERVICE_CITY).eq('is_upcoming',true).order('created_at',{ascending:false});
-  if(error){box.innerHTML="<div class='error'>"+esc(error.message)+"</div>";return;}
-  box.innerHTML=(data||[]).map(p=>`<div class='admin-item'><b>${esc(p.name)}</b><div class='muted'>${money(p.price)} · Stock: ${p.stock??0}</div><button class='btn' style='margin-top:8px' onclick="toggleUpcoming('${p.id}',false)">↩️ Quitar Próximamente</button></div>`).join('') || "<div class='muted'>No hay productos marcados como Próximamente.</div>";
-};
-</script>
-</body>
-</html>
-'''
-          s=s.rstrip()+"\n" if not s.endswith('\n') else s
-          # Ensure we don't duplicate the document tail after truncating at the marker.
-          s += block
-          p.write_text(s,encoding='utf-8')
-          PY
-      - name: Commit patch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git diff --cached --quiet && exit 0
-          git commit -m "Fix Próximamente interaction"
-          git push
+      - run: echo "Workflow legacy desactivado"

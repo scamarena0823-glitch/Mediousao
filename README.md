@@ -59,3 +59,5 @@ Antes de poner la app en producción, revisa también las políticas **RLS (Row 
 3. Publicar esta versión en GitHub/GitHub Pages.
 4. Crear el paquete Android (`.aab`) para Google Play.
 5. Más adelante agregar nuevas ciudades sin cambiar la arquitectura de la app.
+
+<!-- repair-trigger -->

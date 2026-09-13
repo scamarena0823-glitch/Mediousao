@@ -19,7 +19,7 @@ Marketplace de moda usada y nueva para la **zona inicial de Bonao, República Do
 
 - Flujo de publicación de `⏳ Próximamente` reparado para que el producto quede publicado y visible en Inicio.
 - La sección `⏳ Próximamente` se recarga automáticamente al volver a Inicio.
-- El texto de reserva de `⏳ Próximamente` indica ahora correctamente que la reserva es **sin límite de tiempo**.
+- En la interfaz de cliente, Próximamente muestra únicamente la acción **Reservar**, sin mostrar una duración.
 
 ## Archivos
 
@@ -72,3 +72,4 @@ Antes de poner la app en producción, revisa también las políticas **RLS (Row 
 <!-- trigger upcoming visibility fix -->
 <!-- robust query retry -->
 <!-- unlimited reservation text fix -->
+<!-- simplify upcoming reservation text -->

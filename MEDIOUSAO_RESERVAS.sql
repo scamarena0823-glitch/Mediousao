@@ -19,6 +19,20 @@ alter table public.orders
 
 update public.orders set city = 'Bonao' where city is null;
 
+-- IMPORTANTE: los productos Próximamente deben poder verse en Inicio aunque
+-- available = false. Esta política permite al cliente ver productos publicados
+-- de Bonao que estén disponibles O marcados como Próximamente.
+drop policy if exists "Public can view available and upcoming products" on public.products;
+create policy "Public can view available and upcoming products"
+on public.products
+for select
+to anon, authenticated
+using (
+  active = true
+  and city = 'Bonao'
+  and (available = true or is_upcoming = true)
+);
+
 -- Libera únicamente reservas con vencimiento.
 -- Las reservas de productos Próximamente tienen expires_at = NULL y nunca vencen automáticamente.
 create or replace function public.release_expired_reservations()

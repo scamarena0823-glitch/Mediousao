@@ -63,3 +63,4 @@ Antes de poner la app en producción, revisa también las políticas **RLS (Row 
 5. Más adelante agregar nuevas ciudades sin cambiar la arquitectura de la app.
 
 <!-- repair-trigger -->
+<!-- trigger upcoming visibility fix -->

@@ -12,53 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch reservation UI safely
+      - name: Patch Próximamente visibility safely
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
 
-          # Inicio: Upcoming debe anunciar reserva ilimitada.
           s=s.replace('Reserva por 24 h</span>', 'Reserva sin límite de tiempo</span>')
           s=s.replace('Reserva por 24 horas</h2>', 'Reserva</h2>')
           s=s.replace('La reserva dura 24 horas.</div>', 'La reserva se mantiene sin límite de tiempo.</div>')
 
-          # ADM: usar el RPC seguro para cambiar el estado del producto.
-          old='''async function toggleUpcomingAdmin(id,val){
-  const {error}=await client.from("products").update({is_upcoming:val}).eq("id",id);
-  if(error){alert("No se pudo actualizar: "+error.message);return;}
-  await loadUpcomingAdmin();
-  if(typeof loadUpcoming==='function') await loadUpcoming();
-  if(typeof loadAdminProducts==='function') await loadAdminProducts();
-}'''
-          new='''async function toggleUpcomingAdmin(id,val){
-  const state=val?'upcoming':'available';
-  const {error}=await client.rpc("admin_set_product_state",{p_product_id:id,p_state:state});
-  if(error){alert("No se pudo actualizar: "+error.message);return;}
-  await loadUpcomingAdmin();
-  if(typeof loadUpcoming==='function') await loadUpcoming();
-  if(typeof loadAdminProducts==='function') await loadAdminProducts();
-}'''
+          old='''const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("city",SERVICE_CITY).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});'''
+          new='''const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});'''
           s=s.replace(old,new)
 
-          # Al marcar desde la lista principal, también usar el RPC seguro.
-          if 'MEDIOUSAO_UPCOMING_RPC_V3' not in s:
-              block=r'''<script id="MEDIOUSAO_UPCOMING_RPC_V3">
-(function(){
-  window.setUpcomingState=async function(id,state){
-    const {error}=await client.rpc('admin_set_product_state',{p_product_id:id,p_state:state});
-    if(error){alert('No se pudo actualizar el producto: '+error.message);return;}
-    const msg=document.getElementById('adminMsg');
-    if(msg){msg.className='notice';msg.textContent=state==='upcoming'?'Producto marcado como Próximamente. ⏳':state==='available'?'Producto disponible. 🟢':'Producto vendido / no disponible. 🔴';}
-    if(typeof loadAdminProducts==='function') await loadAdminProducts();
-    if(typeof loadUpcomingAdmin==='function') await loadUpcomingAdmin();
-    if(typeof loadUpcoming==='function') await loadUpcoming();
-  };
-})();
-</script>
-'''
-              s=s.replace('</body>',block+'</body>')
+          old2='alert("¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();'
+          new2='alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();'
+          s=s.replace(old2,new2)
 
           p.write_text(s,encoding='utf-8')
           PY
@@ -67,5 +38,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Fix upcoming product publishing flow"
+          git diff --cached --quiet || git commit -m "Fix Próximamente visibility on Inicio"
           git push

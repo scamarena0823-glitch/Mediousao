@@ -1,0 +1,54 @@
+name: Add Próximamente feature
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          home_marker='<div class="section"><h2>Productos</h2><span id="countProducts" class="muted"></span></div>\n<div id="homeGrid" class="grid"></div>'
+          home_insert=home_marker+'\n<section><div class="section"><h2>⏳ Próximamente</h2><span class="muted">Reserva por 24 h</span></div><div id="upcomingGrid" class="grid"></div></section>'
+          if 'id="upcomingGrid"' not in s:
+              if home_marker not in s: raise SystemExit('home marker not found')
+              s=s.replace(home_marker,home_insert,1)
+
+          script_marker='let products=[], cart=JSON.parse(localStorage.getItem("mediousao_cart_v1")||"[]"), selectedProduct=null, reserveMode="delivery", fulfillment="delivery";'
+          script_insert=script_marker+'\nlet upcomingProducts=[];'
+          if 'let upcomingProducts=[];' not in s:
+              if script_marker not in s: raise SystemExit('script marker not found')
+              s=s.replace(script_marker,script_insert,1)
+
+          load_marker='async function loadProducts(){'
+          upcoming_fn='''async function loadUpcoming(){\n  const box=document.getElementById("upcomingGrid");\n  if(!box)return;\n  const {data,error}=await client.from("products").select("id,name,price,description,image_url,category,size,color,stock,active,available,is_reserved,reserved_until,is_upcoming,arrival_date,item_type,audience,city").eq("active",true).eq("city",SERVICE_CITY).eq("is_upcoming",true).order("arrival_date",{ascending:true,nullsFirst:false});\n  if(error){console.error(error);box.innerHTML="<div class='notice'>No pudimos cargar Próximamente.</div>";return;}\n  upcomingProducts=data||[];\n  box.innerHTML=upcomingProducts.map(p=>{const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`}).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";\n}\nfunction reserveUpcoming(id,mode){\n  selectedProduct=upcomingProducts.find(p=>p.id===id);\n  reserveMode=mode;\n  if(!selectedProduct)return;\n  document.getElementById("reserveProduct").innerHTML=`<b>${esc(selectedProduct.name)}</b> · ${money(selectedProduct.price)}<br><span class="muted">⏳ Próximamente · Reserva por 24 horas · ${mode==="delivery"?"🛵 Delivery":"🏪 Recoger"}</span>`;\n  document.getElementById("deliveryFields").style.display=mode==="delivery"?"block":"none";\n  document.getElementById("pickupFields").style.display=mode==="pickup"?"block":"none";\n  document.getElementById("reserveBtn").textContent=mode==="delivery"?"Confirmar reserva para delivery":"Confirmar reserva para recoger";\n  if(mode==="delivery"){fillTimes("rTime");const today=new Date().toISOString().slice(0,10);document.getElementById("rDate").min=today;document.getElementById("rDate").value=today}\n  show("reserve");\n}\n\n'''
+          if 'async function loadUpcoming()' not in s:
+              if load_marker not in s: raise SystemExit('load marker not found')
+              s=s.replace(load_marker,upcoming_fn+load_marker,1)
+
+          old_end='saveCart();loadProducts();'
+          new_end='saveCart();loadProducts();loadUpcoming();'
+          if old_end in s and 'saveCart();loadProducts();loadUpcoming();' not in s:
+              s=s.replace(old_end,new_end,1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Add Próximamente section"
+          git push

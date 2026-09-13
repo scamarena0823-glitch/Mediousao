@@ -1,0 +1,48 @@
+name: MEDIOUSAO Explore UI fix
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.github/workflows/fix-explore-ui.yml'
+      - 'index.html'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Hide Catalog heading and Inicio button in Explore
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          marker = '/* MEDIOUSAO EXPLORE UI FIX */'
+          if marker not in s:
+              injection = '<style id="mediousao-explore-ui-fix">' + marker + '#catalog>.section{display:none!important;}</style>\n'
+              if '</head>' not in s:
+                  raise SystemExit('No se encontró </head> en index.html')
+              s = s.replace('</head>', injection + '</head>', 1)
+              p.write_text(s)
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'Sin cambios'
+          else
+            git commit -m 'Fix Explore: remove Catalog heading and Inicio button'
+            git push
+          fi
+      - name: Remove temporary workflow
+        run: |
+          rm -f .github/workflows/fix-explore-ui.yml
+          git add .github/workflows/fix-explore-ui.yml
+          git commit -m 'Remove temporary Explore UI fix workflow'
+          git push

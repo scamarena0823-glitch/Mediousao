@@ -1,9 +1,24 @@
 /* MEDIOUSAO ready flow
    Admin: marks a reserved upcoming product as received/ready.
-   The customer-facing ready notification is wired through the order status.
+   Customer-facing ready notification is wired through the order status.
 */
 (function(){
   const oldLoadUpcomingAdmin = window.loadUpcomingAdmin;
+
+  function addAdminAccess(){
+    if(document.getElementById('mediousaoAdminAccess')) return;
+    const header=document.querySelector('header');
+    if(!header) return;
+    const btn=document.createElement('button');
+    btn.id='mediousaoAdminAccess';
+    btn.className='btn';
+    btn.style.cssText='margin-top:10px;width:100%;font-size:13px';
+    btn.textContent='🔐 Administración';
+    btn.onclick=function(){
+      if(typeof window.show==='function') window.show('adminLogin');
+    };
+    header.appendChild(btn);
+  }
 
   window.loadUpcomingAdmin = async function(){
     const box = document.getElementById('adminUpcomingProducts');
@@ -62,4 +77,7 @@
       alert('No se pudo marcar como listo: '+(e.message||e));
     }
   };
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',addAdminAccess);
+  else addAdminAccess();
 })();

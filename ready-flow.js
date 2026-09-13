@@ -1,4 +1,4 @@
-/* MEDIOUSAO UI v2026-09-13-21 */
+/* MEDIOUSAO UI v2026-09-13-22 */
 (function(){
   function hideBonaoEverywhere(){
     document.querySelectorAll('body *').forEach(el=>{
@@ -33,11 +33,13 @@
     document.querySelectorAll('body:has(#home.active) input[type="search"],body:has(#home.active) input[placeholder*="buscar" i],body:has(#home.active) input[placeholder*="tenis" i]').forEach(el=>{
       (el.closest('form,.search,.search-box,.searchbar,.toolbar')||el).style.setProperty('display','none','important');
     });
+    const search=document.getElementById('search');
+    if(search) search.style.setProperty('display','none','important');
     hideBonaoEverywhere();
   }
   function inject(){
-    if(document.getElementById('mediousao-ui-v21'))return;
-    const style=document.createElement('style');style.id='mediousao-ui-v21';style.textContent=`
+    if(document.getElementById('mediousao-ui-v22'))return;
+    const style=document.createElement('style');style.id='mediousao-ui-v22';style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}
       header .sub,header .brandline{display:none!important}
@@ -61,6 +63,7 @@
       #homeGrid .card img{display:block!important;width:100%!important;aspect-ratio:1/1!important;object-fit:cover!important}
       #homeGrid .card .card-body,#homeGrid .card .info,#homeGrid .card .details{padding-top:9px!important}
       #homeGrid .card button,#homeGrid .card a{display:none!important}
+      #search{display:none!important}
       body:has(#home.active) input[type="search"],body:has(#home.active) input[placeholder*="Buscar" i],body:has(#home.active) input[placeholder*="buscar" i],body:has(#home.active) input[placeholder*="Tenis" i],body:has(#home.active) .search,body:has(#home.active) .search-box,body:has(#home.active) .searchbar,body:has(#home.active) form:has(input[type="search"]){display:none!important}
       #home input[type="search"],#home input[placeholder*="Buscar" i],#home input[placeholder*="buscar" i],#home input[placeholder*="Tenis" i],#home .search,#home .search-box,#home .searchbar{display:none!important}
       #home [id*="connection" i],#home [class*="connection" i]{display:none!important}
@@ -76,5 +79,5 @@
   }
   function updateCartBadge(){const badge=document.querySelector('#mediousaoTopCart .cart-badge');if(!badge)return;let count=0;try{if(Array.isArray(window.cart))count=window.cart.reduce((n,x)=>n+Number(x.quantity||1),0);else if(Array.isArray(window.cartItems))count=window.cartItems.reduce((n,x)=>n+Number(x.quantity||1),0)}catch(e){}if(count>0){badge.textContent=count>99?'99+':String(count);badge.style.display='flex'}else badge.style.display='none'}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inject);else inject();
-  setTimeout(inject,300);setTimeout(hideHomeExtras,700);setInterval(()=>{hideHomeExtras();hideBonaoEverywhere()},900);setTimeout(updateCartBadge,900);
+  setTimeout(inject,300);setTimeout(hideHomeExtras,700);setInterval(()=>{hideHomeExtras();hideBonaoEverywhere()},500);setTimeout(updateCartBadge,900);
 })();

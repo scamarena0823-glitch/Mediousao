@@ -69,3 +69,4 @@ Antes de poner la app en producción, revisa también las políticas **RLS (Row 
 
 <!-- repair-trigger -->
 <!-- trigger upcoming visibility fix -->
+<!-- robust query retry -->

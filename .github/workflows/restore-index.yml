@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Restore index from last good app commit
         run: |
+          git fetch origin 44768ef3a7d2a57551d2816f31f82600f246fd58 --depth=1
           git checkout 44768ef3a7d2a57551d2816f31f82600f246fd58 -- index.html
           python3 - <<'PY'
           from pathlib import Path

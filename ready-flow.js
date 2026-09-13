@@ -1,9 +1,9 @@
-/* MEDIOUSAO UI v2026-09-13-14 */
+/* MEDIOUSAO UI v2026-09-13-15 */
 (function(){
   function inject(){
-    if(document.getElementById('mediousao-ui-v14')) return;
+    if(document.getElementById('mediousao-ui-v15')) return;
     const style=document.createElement('style');
-    style.id='mediousao-ui-v14';
+    style.id='mediousao-ui-v15';
     style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}
@@ -20,10 +20,11 @@
       main{padding-bottom:88px!important}
       nav{display:none!important}
 
-      /* INICIO CASA: solo productos disponibles, foto + informacion */
+      /* CASA: limpia, solo articulos disponibles con foto + informacion */
       #home .hero{display:none!important}
       #home>.section{display:none!important}
       #home>section:has(#upcomingGrid){display:none!important}
+      #home #connection{display:none!important}
       #homeGrid{margin-top:8px!important}
       #homeGrid .card{overflow:hidden!important}
       #homeGrid .card img{display:block!important;width:100%!important;aspect-ratio:1/1!important;object-fit:cover!important}

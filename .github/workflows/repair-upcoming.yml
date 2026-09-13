@@ -12,28 +12,68 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Ajustar texto de reservas Próximamente
+      - name: Implementar estado RESERVADO y mensaje de confirmación
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          s = s.replace('<span class="muted">Reserva sin límite de tiempo</span>', '')
-          s = s.replace('<span class="muted">Reserva por 24 h</span>', '')
-          s = s.replace('<h2>Reservar por 24 horas</h2>', '<h2>Reservar</h2>')
-          s = s.replace('<div class="notice">🔒 Al confirmar, el producto queda apartado durante 24 horas y deja de aparecer disponible para otros clientes.</div>', '')
-          s = s.replace('<div class="notice">🔒 Al confirmar, el producto queda apartado sin límite de tiempo y deja de aparecer disponible para otros clientes.</div>', '')
-          s = s.replace('<div class="notice">🏪 Pasarás a recoger el producto. La reserva se mantiene sin límite de tiempo.</div>', '<div class="notice">🏪 Pasarás a recoger el producto.</div>')
-          s = s.replace('⏳ Próximamente · Reserva por 24 horas ·', '⏳ Próximamente ·')
-          s = s.replace('⏳ Próximamente · Reserva por 24 h ·', '⏳ Próximamente ·')
-          s = s.replace('⏳ Próximamente · Reserva sin límite de tiempo ·', '⏳ Próximamente ·')
+
+          # El mensaje del encabezado de Próximamente no muestra duración.
+          s = s.replace('<span class="muted">Reserva sin límite de tiempo</span>', '<span class="muted">Te notificaremos cuando esté disponible.</span>')
+          s = s.replace('<span class="muted">Reserva por 24 h</span>', '<span class="muted">Te notificaremos cuando esté disponible.</span>')
+
+          # Sustituir loadUpcoming para que un producto reservado aparezca como RESERVADO.
+          pattern = r'async function loadUpcoming\(\)\{.*?\n\}\nfunction reserveUpcoming'
+          replacement = r'''async function loadUpcoming(){
+            const box=document.getElementById("upcomingGrid");
+            if(!box)return;
+            box.innerHTML="<div class='notice'>Cargando Próximamente…</div>";
+            const {data,error}=await client.from("products")
+              .select("*")
+              .eq("city",SERVICE_CITY)
+              .eq("is_upcoming",true)
+              .gt("stock",0)
+              .order("created_at",{ascending:false});
+            if(error){
+              console.error("MEDIOUSAO Próximamente:",error);
+              box.innerHTML=`<div class='error'>No pudimos cargar Próximamente.<br><small>${esc(error.message||error)}</small></div>`;
+              return;
+            }
+            upcomingProducts=(data||[]).filter(p=>p.active===true);
+            box.innerHTML=upcomingProducts.map(p=>{
+              const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);
+              const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";
+              const reserved=!!p.is_reserved;
+              const action=reserved
+                ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`
+                : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button>`;
+              return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div>${action}</div></div>`;
+            }).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
+          }
+          function reserveUpcoming'''
+          s, n = re.subn(pattern, replacement, s, flags=re.S)
+          if not n:
+              raise SystemExit('No se encontró loadUpcoming para reemplazar')
+
+          # Confirmación para Próximamente: sin mencionar duración.
+          s = s.replace(
+            'alert("¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();',
+            'alert("💚 ¡Reserva realizada! Te notificaremos cuando esté disponible.");show("home");loadProducts();loadUpcoming();'
+          )
+          s = s.replace(
+            'alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();',
+            'alert(selectedProduct?.is_upcoming ? "💚 ¡Reserva realizada! Te notificaremos cuando esté disponible." : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();'
+          )
+
           p.write_text(s, encoding='utf-8')
-          print('Texto de Próximamente ajustado: solo Reservar')
+          print('Implementado: RESERVADO + mensaje de disponibilidad')
           PY
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Simplify upcoming reservation text"
+          git diff --cached --quiet || git commit -m "Show upcoming products as reserved after reservation"
           git push

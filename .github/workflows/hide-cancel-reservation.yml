@@ -1,0 +1,34 @@
+name: Hide cancel reservation from bottom
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Hide bottom cancel control
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '/* MEDIOUSAO: hide global cancel reservation control */'
+          if marker not in s:
+              s = s.replace('</style>', '/* MEDIOUSAO: hide global cancel reservation control */\n#reservationCancelSlot{display:none!important;}\n</style>', 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'Hide cancel reservation from bottom navigation'
+            git push
+          fi

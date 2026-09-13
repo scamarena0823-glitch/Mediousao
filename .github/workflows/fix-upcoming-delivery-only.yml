@@ -1,69 +1,9 @@
-name: Fix Próximamente - solo delivery
-
+name: Fix upcoming delivery only
 on:
-  push:
-    paths:
-      - 'index.html'
-      - '.github/workflows/fix-upcoming-delivery-only.yml'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  fix:
-    if: github.actor != 'github-actions[bot]'
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Remove pickup from Próximamente
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          old = '''const action=reserved
-      ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`
-      : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button>`;'''
-          new = '''const action=reserved
-      ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`
-      : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}')">🛵 Reservar para delivery</button>`;'''
-          s = s.replace(old, new)
-
-          old2 = '''function reserveUpcoming(id,mode){
-  selectedProduct=upcomingProducts.find(p=>p.id===id);
-  reserveMode=mode;'''
-          new2 = '''function reserveUpcoming(id){
-  selectedProduct=upcomingProducts.find(p=>p.id===id);
-  reserveMode="delivery";'''
-          s = s.replace(old2, new2)
-
-          old3 = '''<span class="muted">⏳ Próximamente · ${mode==="delivery"?"🛵 Delivery":"🏪 Recoger"}</span>'''
-          new3 = '''<span class="muted">⏳ Próximamente · 🛵 Delivery</span>'''
-          s = s.replace(old3, new3)
-
-          old4 = '''  document.getElementById("deliveryFields").style.display=mode==="delivery"?"block":"none";
-  document.getElementById("pickupFields").style.display=mode==="pickup"?"block":"none";
-  document.getElementById("reserveBtn").textContent=mode==="delivery"?"Confirmar reserva para delivery":"Confirmar reserva para recoger";'''
-          new4 = '''  document.getElementById("deliveryFields").style.display="block";
-  document.getElementById("pickupFields").style.display="none";
-  document.getElementById("reserveBtn").textContent="Confirmar reserva para delivery";'''
-          s = s.replace(old4, new4)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Commit fix
-        run: |
-          if git diff --quiet; then
-            echo "No changes needed"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "Fix Próximamente: solo delivery"
-          git push
+      - run: echo "Legacy workflow disabled."

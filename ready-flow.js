@@ -1,5 +1,15 @@
-/* MEDIOUSAO UI v2026-09-13-19 */
+/* MEDIOUSAO UI v2026-09-13-20 */
 (function(){
+  function hideBonaoEverywhere(){
+    document.querySelectorAll('body *').forEach(el=>{
+      if(el.id==='homeGrid' || el.closest('#homeGrid'))return;
+      const t=(el.textContent||'').replace(/\s+/g,' ').trim();
+      if(!/bonao/i.test(t))return;
+      if(t.length<220){
+        el.style.setProperty('display','none','important');
+      }
+    });
+  }
   function hideHomeExtras(){
     const home=document.getElementById('home');
     const homeActive=!!(home&&home.classList.contains('active'));
@@ -13,7 +23,7 @@
       });
     }
     const globalBonao=document.querySelector('.app > .notice');
-    if(globalBonao && homeActive) globalBonao.style.setProperty('display','none','important');
+    if(globalBonao) globalBonao.style.setProperty('display','none','important');
     if(!home)return;
     ['#connection','.notice','.location-notice','.bonao-notice'].forEach(sel=>{
       home.querySelectorAll(sel).forEach(el=>el.style.setProperty('display','none','important'));
@@ -31,11 +41,12 @@
     home.querySelectorAll('input[type="search"],input[placeholder*="buscar" i],input[placeholder*="tenis" i]').forEach(el=>{
       (el.closest('form,.search,.search-box,.searchbar,.toolbar')||el).style.setProperty('display','none','important');
     });
+    hideBonaoEverywhere();
   }
   function inject(){
-    if(document.getElementById('mediousao-ui-v19'))return;
+    if(document.getElementById('mediousao-ui-v20'))return;
     const style=document.createElement('style');
-    style.id='mediousao-ui-v19';
+    style.id='mediousao-ui-v20';
     style.textContent=`
       header{position:sticky!important;top:0!important;padding:18px 18px 14px!important;text-align:center!important;z-index:10!important}
       header .logo{font-size:32px!important;font-weight:950!important;letter-spacing:-1.8px!important;text-align:center!important}
@@ -62,12 +73,13 @@
       #homeGrid .card button,#homeGrid .card a{display:none!important}
       #home input[type="search"],#home input[placeholder*="Buscar" i],#home input[placeholder*="buscar" i],#home input[placeholder*="Tenis" i],#home .search,#home .search-box,#home .searchbar{display:none!important}
       #home [id*="connection" i],#home [class*="connection" i]{display:none!important}
-      .app > .notice{display:none!important}
+      .app > .notice,.app .location-notice,.app .bonao-notice,[class*="bonao" i],[id*="bonao" i]{display:none!important}
     `;
     document.head.appendChild(style);
-    const obs=new MutationObserver(()=>hideHomeExtras());
+    const obs=new MutationObserver(()=>{hideHomeExtras();hideBonaoEverywhere()});
     obs.observe(document.body,{childList:true,subtree:true});
     hideHomeExtras();
+    hideBonaoEverywhere();
     const header=document.querySelector('header');
     if(header && !document.getElementById('mediousaoTopCart')){
       const cart=document.createElement('button');cart.id='mediousaoTopCart';cart.setAttribute('aria-label','Carrito');
@@ -94,5 +106,5 @@
   }
   function updateCartBadge(){const badge=document.querySelector('#mediousaoTopCart .cart-badge');if(!badge)return;let count=0;try{if(Array.isArray(window.cart))count=window.cart.reduce((n,x)=>n+Number(x.quantity||1),0);else if(Array.isArray(window.cartItems))count=window.cartItems.reduce((n,x)=>n+Number(x.quantity||1),0)}catch(e){}if(count>0){badge.textContent=count>99?'99+':String(count);badge.style.display='flex'}else badge.style.display='none'}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inject);else inject();
-  setTimeout(inject,300);setTimeout(hideHomeExtras,700);setInterval(hideHomeExtras,1200);setTimeout(updateCartBadge,900);
+  setTimeout(inject,300);setTimeout(hideHomeExtras,700);setInterval(()=>{hideHomeExtras();hideBonaoEverywhere()},900);setTimeout(updateCartBadge,900);
 })();

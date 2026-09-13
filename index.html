@@ -193,7 +193,11 @@ async function loadUpcoming(){
   box.innerHTML=upcomingProducts.map(p=>{
     const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:icon(p);
     const date=p.arrival_date?`<div class='tag'>Llegada estimada: ${esc(p.arrival_date)}</div>`:"";
-    return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button></div></div>`;
+    const reserved=!!p.is_reserved;
+    const action=reserved
+      ? `<div class="tag" style="font-weight:900;color:#111;margin-top:10px">🔒 RESERVADO</div>`
+      : `<button class="btn primary full" onclick="reserveUpcoming('${p.id}','delivery')">🛵 Reservar</button><button class="btn full" style="margin-top:7px" onclick="reserveUpcoming('${p.id}','pickup')">🏪 Recoger</button>`;
+    return `<div class="card"><div class="photo">${photo}</div><div class="info"><div class="name">${esc(p.name)}</div><div class="tag">⏳ PRÓXIMAMENTE</div>${date}<div class="price">${money(p.price)}</div>${action}</div></div>`;
   }).join("")||"<div class='notice'>No hay productos próximos todavía.</div>";
 }
 function reserveUpcoming(id,mode){
@@ -254,7 +258,7 @@ async function submitReservation(){
  const deliveryDate=reserveMode==="delivery"?document.getElementById("rDate").value:null,deliveryTime=reserveMode==="delivery"?document.getElementById("rTime").value:null;
  const {data,error}=await client.rpc("reserve_product",{p_product_id:selectedProduct.id,p_customer_name:name,p_customer_phone:phone,p_fulfillment_method:reserveMode,p_delivery_address:address,p_delivery_sector:sector,p_delivery_date:deliveryDate,p_delivery_time:deliveryTime,p_city:SERVICE_CITY});
  if(error){alert("La reserva necesita la actualización de la base de datos antes de activarse.");console.error(error);return}
- alert(selectedProduct?.is_upcoming ? "¡Reserva confirmada! El producto queda apartado sin límite de tiempo. 🔥" : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();
+ alert(selectedProduct?.is_upcoming ? "💚 ¡Reserva realizada! Te notificaremos cuando esté disponible." : "¡Reserva confirmada! El producto queda apartado por 24 horas. 🔥");show("home");loadProducts();loadUpcoming();
 }
 
 let adminUser=null;

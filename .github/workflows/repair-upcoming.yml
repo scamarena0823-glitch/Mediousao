@@ -1,5 +1,7 @@
 name: Repair Próximamente
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
@@ -30,7 +32,7 @@ jobs:
           }
           async function removeUpcoming(id){
             const wrap=document.getElementById('upcoming-actions-'+id);
-            if(wrap)wrap.innerHTML='<button class="btn" onclick="setUpcomingState(\\''+id+'\\',\\'available\\')">🟢 Poner disponible</button><button class="btn danger" onclick="setUpcomingState(\\''+id+'\\',\\'sold\\')">🔴 Vendido / no disponible</button>';
+            if(wrap)wrap.innerHTML='<button class="btn" onclick="setUpcomingState(\\''+id+'\\',\\'available\\')">🟢 Poner disponible</button><button class="btn" onclick="setUpcomingState(\\''+id+'\\',\\'sold\\')">🔴 Vendido / no disponible</button>';
           }
           async function loadAdminProducts(){
             const el=document.getElementById('adminProducts'); if(!el)return;
@@ -68,5 +70,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Fix explicit upcoming product actions"
+          git diff --cached --quiet || git commit -m "Fix Próximamente controls with secure RPC"
           git push

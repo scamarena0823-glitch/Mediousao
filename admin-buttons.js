@@ -2,23 +2,120 @@
 (function(){
   const escBtn=s=>String(s??'').replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
   let appButtons=[];
-  function ensureStyles(){if(document.getElementById('mediousaoButtonStyles'))return;const s=document.createElement('style');s.id='mediousaoButtonStyles';s.textContent=`#customHomeButtons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}#customHomeButtons .custom-app-btn{width:100%;min-height:52px;border:1px solid #ddd;border-radius:12px;background:#fff;font-weight:800;font-size:15px;padding:12px}#customHomeButtons .primary-style{background:var(--primary,#e50914);color:#fff;border-color:transparent}#mediousaoBottomNav{overflow-x:auto;justify-content:flex-start;gap:8px}#mediousaoBottomNav button{min-width:88px;flex:1 0 auto}.mediousao-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.mediousao-brand-wrap{min-width:0;flex:1}#mediousaoTopButtons{display:flex;gap:7px;align-items:center;justify-content:flex-end;flex:0 0 auto}#mediousaoTopButtons button{position:relative;min-width:46px;min-height:46px;border:1px solid #ddd;border-radius:14px;background:#fff;padding:7px 9px;font-weight:800;font-size:13px;white-space:nowrap}#mediousaoTopButtons button.top-cart{font-size:0;width:50px;height:50px;padding:0;border-radius:15px}#mediousaoTopButtons button.top-cart .top-icon{font-size:25px;line-height:1}#mediousaoTopButtons .top-badge{position:absolute;right:-5px;top:-7px;min-width:21px;height:21px;padding:0 5px;border-radius:999px;background:#e50914;color:#fff;font:800 12px/21px Arial;text-align:center}#mediousaoTopButtons .primary-style{background:var(--primary,#e50914);color:#fff;border-color:transparent}`;document.head.appendChild(s)}
-  function ensureAreas(){let hero=document.getElementById('homeHero');if(hero&&!document.getElementById('customHomeButtons')){let x=document.createElement('div');x.id='customHomeButtons';hero.insertAdjacentElement('afterend',x)}let h=document.querySelector('.app > header');if(h&&!document.getElementById('mediousaoTopButtons')){let logo=h.querySelector('#appLogo'),sub=h.querySelector('#appSubtitle'),line=h.querySelector('.brandline');if(logo){let row=document.createElement('div');row.className='mediousao-header-row';let brand=document.createElement('div');brand.className='mediousao-brand-wrap';h.insertBefore(row,logo);row.appendChild(brand);brand.appendChild(logo);if(sub)brand.appendChild(sub);if(line)brand.appendChild(line);let x=document.createElement('div');x.id='mediousaoTopButtons';row.appendChild(x)}else{let x=document.createElement('div');x.id='mediousaoTopButtons';h.insertBefore(x,h.firstChild)}}let n=document.querySelector('.app > nav');if(n&&!n.id)n.id='mediousaoBottomNav'}
-  function ensureAdminUI(){const tabs=document.querySelector('#admin .admin-tabs');if(!tabs)return;if(!document.getElementById('adminButtonsTab')){let b=document.createElement('button');b.id='adminButtonsTab';b.className='admin-tab';b.textContent='🔘 Botones';b.onclick=function(){adminTab('buttons',this)};tabs.appendChild(b)}if(document.getElementById('adminPanelButtons'))return;let p=document.createElement('div');p.id='adminPanelButtons';p.className='admin-panel';p.innerHTML=`<div class="box" style="padding:16px;margin-bottom:14px"><h2>Crear botón</h2><p class="muted">Crea y coloca botones donde quieras.</p><input id="btnLabel" placeholder="Nombre del botón, ej. Ofertas" style="margin-bottom:8px"><input id="btnIcon" placeholder="Icono, ej. 🔥" style="margin-bottom:8px"><select id="btnPlacement" class="search" style="margin-bottom:8px"><option value="home">Pantalla de Inicio</option><option value="nav">Barra inferior</option><option value="top">Barra superior</option></select><select id="btnActionType" class="search" style="margin-bottom:8px"><option value="catalog">Abrir catálogo</option><option value="category">Abrir categoría</option><option value="product">Abrir producto</option><option value="cart">Abrir carrito</option><option value="home">Ir a Inicio</option><option value="url">Abrir enlace</option><option value="none">Sin acción / Próximamente</option></select><input id="btnActionValue" placeholder="Categoría, ID de producto o enlace (si aplica)" style="margin-bottom:8px"><select id="btnStyle" class="search" style="margin-bottom:8px"><option value="normal">Claro</option><option value="primary">Color principal</option></select><button class="btn primary full" onclick="addAppButtonAdmin()">Crear botón</button></div><div class="box" style="padding:16px"><div class="row"><h2>Todos los botones</h2><button class="btn" onclick="loadAdminButtons()">Actualizar</button></div><div class="notice">Editar permite cambiar también la ubicación: Inicio, barra inferior o barra superior.</div><div id="adminButtonsList"></div></div>`;document.querySelector('#admin').appendChild(p)}
+  const sizeOf=b=>Math.max(32,Math.min(120,Number(b.button_size||50)));
+  const iconOf=b=>Math.max(12,Math.min(64,Number(b.icon_size||24)));
+
+  function ensureStyles(){
+    if(document.getElementById('mediousaoButtonStyles'))return;
+    const s=document.createElement('style');
+    s.id='mediousaoButtonStyles';
+    s.textContent=`
+      #customHomeButtons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}
+      #customHomeButtons .custom-app-btn{width:100%;border:1px solid #ddd;border-radius:12px;background:#fff;font-weight:800;font-size:15px;padding:10px 12px}
+      #customHomeButtons .primary-style{background:var(--primary,#e50914);color:#fff;border-color:transparent}
+      #mediousaoBottomNav{overflow-x:auto;justify-content:flex-start;gap:8px}
+      #mediousaoBottomNav button{flex:1 0 auto}
+      .mediousao-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+      .mediousao-brand-wrap{min-width:0;flex:1}
+      #mediousaoTopButtons{display:flex;gap:7px;align-items:center;justify-content:flex-end;flex:0 0 auto}
+      #mediousaoTopButtons button{position:relative;border:1px solid #ddd;border-radius:14px;background:#fff;font-weight:800;white-space:nowrap}
+      #mediousaoTopButtons button.top-cart{font-size:0;padding:0}
+      #mediousaoTopButtons .top-badge{position:absolute;right:-5px;top:-7px;min-width:21px;height:21px;padding:0 5px;border-radius:999px;background:#e50914;color:#fff;font:800 12px/21px Arial;text-align:center}
+      #mediousaoTopButtons .primary-style{background:var(--primary,#e50914);color:#fff;border-color:transparent}
+      .btn-size-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    `;
+    document.head.appendChild(s);
+  }
+
+  function ensureAreas(){
+    let hero=document.getElementById('homeHero');
+    if(hero&&!document.getElementById('customHomeButtons')){let x=document.createElement('div');x.id='customHomeButtons';hero.insertAdjacentElement('afterend',x)}
+    let h=document.querySelector('.app > header');
+    if(h&&!document.getElementById('mediousaoTopButtons')){
+      let logo=h.querySelector('#appLogo'),sub=h.querySelector('#appSubtitle'),line=h.querySelector('.brandline');
+      if(logo){let row=document.createElement('div');row.className='mediousao-header-row';let brand=document.createElement('div');brand.className='mediousao-brand-wrap';h.insertBefore(row,logo);row.appendChild(brand);brand.appendChild(logo);if(sub)brand.appendChild(sub);if(line)brand.appendChild(line);let x=document.createElement('div');x.id='mediousaoTopButtons';row.appendChild(x)}
+      else{let x=document.createElement('div');x.id='mediousaoTopButtons';h.insertBefore(x,h.firstChild)}
+    }
+    let n=document.querySelector('.app > nav');if(n&&!n.id)n.id='mediousaoBottomNav';
+  }
+
+  function ensureAdminUI(){
+    const tabs=document.querySelector('#admin .admin-tabs');if(!tabs)return;
+    if(!document.getElementById('adminButtonsTab')){let b=document.createElement('button');b.id='adminButtonsTab';b.className='admin-tab';b.textContent='🔘 Botones';b.onclick=function(){adminTab('buttons',this)};tabs.appendChild(b)}
+    if(document.getElementById('adminPanelButtons'))return;
+    let p=document.createElement('div');p.id='adminPanelButtons';p.className='admin-panel';
+    p.innerHTML=`
+      <div class="box" style="padding:16px;margin-bottom:14px">
+        <h2>Crear botón</h2><p class="muted">Crea y coloca botones donde quieras.</p>
+        <input id="btnLabel" placeholder="Nombre del botón, ej. Ofertas" style="margin-bottom:8px">
+        <input id="btnIcon" placeholder="Icono, ej. 🔥" style="margin-bottom:8px">
+        <select id="btnPlacement" class="search" style="margin-bottom:8px"><option value="home">Pantalla de Inicio</option><option value="nav">Barra inferior</option><option value="top">Barra superior</option></select>
+        <select id="btnActionType" class="search" style="margin-bottom:8px"><option value="catalog">Abrir catálogo</option><option value="category">Abrir categoría</option><option value="product">Abrir producto</option><option value="cart">Abrir carrito</option><option value="home">Ir a Inicio</option><option value="url">Abrir enlace</option><option value="none">Sin acción / Próximamente</option></select>
+        <input id="btnActionValue" placeholder="Categoría, ID de producto o enlace (si aplica)" style="margin-bottom:8px">
+        <select id="btnStyle" class="search" style="margin-bottom:8px"><option value="normal">Claro</option><option value="primary">Color principal</option></select>
+        <div class="btn-size-grid"><div><label>Tamaño del botón</label><input id="btnButtonSize" type="number" min="32" max="120" value="50"></div><div><label>Tamaño del icono</label><input id="btnIconSize" type="number" min="12" max="64" value="24"></div></div>
+        <button class="btn primary full" onclick="addAppButtonAdmin()">Crear botón</button>
+      </div>
+      <div class="box" style="padding:16px"><div class="row"><h2>Todos los botones</h2><button class="btn" onclick="loadAdminButtons()">Actualizar</button></div><div class="notice">Cada botón puede tener ubicación, tamaño e icono diferentes.</div><div id="adminButtonsList"></div></div>`;
+    document.querySelector('#admin').appendChild(p);
+  }
+
   function action(b){let v=b.action_value||'';if(b.action_type==='home')show('home');else if(b.action_type==='catalog')showCatalog();else if(b.action_type==='cart')show('cart');else if(b.action_type==='category'){selectedCategory=v;show('catalog')}else if(b.action_type==='product')detail(v);else if(b.action_type==='url'&&v)window.open(v,'_blank','noopener,noreferrer')}
   function cartQty(){try{return cart.reduce((a,x)=>a+x.qty,0)}catch(e){return 0}}
-  function renderPublic(){ensureAreas();let active=appButtons.filter(b=>b.active).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));let home=document.getElementById('customHomeButtons'),top=document.getElementById('mediousaoTopButtons'),nav=document.getElementById('mediousaoBottomNav');let homes=active.filter(b=>(b.placement||'home')==='home');if(home){home.innerHTML=homes.map(b=>`<button class="custom-app-btn ${b.style==='primary'?'primary-style':''}" onclick="runAppButton('${b.id}')">${escBtn(b.icon||'')} ${escBtn(b.label)}</button>`).join('');home.style.display=homes.length?'grid':'none'}let tops=active.filter(b=>b.placement==='top');if(top){top.innerHTML=tops.map(b=>{let cart=b.system_key==='cart'||b.action_type==='cart';return `<button class="${b.style==='primary'?'primary-style ':''}${cart?'top-cart':''}" onclick="runAppButton('${b.id}')" aria-label="${escBtn(b.label)}"><span class="top-icon">${escBtn(b.icon||'🔘')}</span>${cart?`<span class="top-badge" id="topCartCount">${cartQty()}</span>`:` <span>${escBtn(b.label)}</span>`}</button>`}).join('');top.style.display=tops.length?'flex':'none'}let ns=active.filter(b=>b.placement==='nav');if(nav&&ns.length){nav.innerHTML=ns.map(b=>`<button data-nav-key="${escBtn(b.system_key||'custom')}" onclick="runAppButton('${b.id}')">${escBtn(b.icon||'🔘')}<br>${escBtn(b.label)}${b.system_key==='cart'?` <span id="cartCount">${cartQty()}</span>`:''}</button>`).join('')}refreshActive()}
+
+  function renderPublic(){
+    ensureAreas();
+    let active=appButtons.filter(b=>b.active).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    let home=document.getElementById('customHomeButtons'),top=document.getElementById('mediousaoTopButtons'),nav=document.getElementById('mediousaoBottomNav');
+    let homes=active.filter(b=>(b.placement||'home')==='home');
+    if(home){home.innerHTML=homes.map(b=>`<button class="custom-app-btn ${b.style==='primary'?'primary-style':''}" style="min-height:${sizeOf(b)}px" onclick="runAppButton('${b.id}')"><span style="font-size:${iconOf(b)}px">${escBtn(b.icon||'')}</span> ${escBtn(b.label)}</button>`).join('');home.style.display=homes.length?'grid':'none'}
+    let tops=active.filter(b=>b.placement==='top');
+    if(top){top.innerHTML=tops.map(b=>{let cart=b.system_key==='cart'||b.action_type==='cart',sz=sizeOf(b);return `<button class="${b.style==='primary'?'primary-style ':''}${cart?'top-cart':''}" style="width:${sz}px;height:${sz}px;min-width:${sz}px;min-height:${sz}px;padding:${cart?'0':'6px 8px'}" onclick="runAppButton('${b.id}')" aria-label="${escBtn(b.label)}"><span class="top-icon" style="font-size:${iconOf(b)}px">${escBtn(b.icon||'🔘')}</span>${cart?`<span class="top-badge" id="topCartCount">${cartQty()}</span>`:` <span>${escBtn(b.label)}</span>`}</button>`}).join('');top.style.display=tops.length?'flex':'none'}
+    let ns=active.filter(b=>b.placement==='nav');
+    if(nav&&ns.length){nav.innerHTML=ns.map(b=>`<button data-nav-key="${escBtn(b.system_key||'custom')}" style="min-width:${Math.max(70,sizeOf(b)+28)}px;min-height:${sizeOf(b)}px" onclick="runAppButton('${b.id}')"><span style="font-size:${iconOf(b)}px">${escBtn(b.icon||'🔘')}</span><br>${escBtn(b.label)}${b.system_key==='cart'?` <span id="cartCount">${cartQty()}</span>`:''}</button>`).join('')}
+    refreshActive();
+  }
+
   async function loadPublic(){try{const {data,error}=await client.from('app_buttons').select('*').eq('active',true).order('sort_order',{ascending:true});if(error)throw error;appButtons=data||[];renderPublic()}catch(e){console.warn(e)}}
-  function refreshActive(){let nav=document.getElementById('mediousaoBottomNav');if(!nav)return;nav.querySelectorAll('button').forEach(x=>x.classList.remove('on'));let a=document.querySelector('.screen.active')?.id,k=a==='home'?'home':a==='catalog'?'catalog':a==='cart'?'cart':'';if(k)nav.querySelector(`[data-nav-key="${k}"]`)?.classList.add('on');let tc=document.getElementById('topCartCount');if(tc)tc.textContent=cartQty()}
+  function refreshActive(){let nav=document.getElementById('mediousaoBottomNav');if(nav){nav.querySelectorAll('button').forEach(x=>x.classList.remove('on'));let a=document.querySelector('.screen.active')?.id,k=a==='home'?'home':a==='catalog'?'catalog':a==='cart'?'cart':'';if(k)nav.querySelector(`[data-nav-key="${k}"]`)?.classList.add('on')}let tc=document.getElementById('topCartCount');if(tc)tc.textContent=cartQty()}
   window.runAppButton=id=>{let b=appButtons.find(x=>String(x.id)===String(id));if(b)action(b);setTimeout(refreshActive,0)};
   const placeName=p=>p==='nav'?'Barra inferior':p==='top'?'Barra superior':'Inicio';
-  function row(b,i){let locked=!!b.system_key;return `<div class="admin-item"><div class="row"><div><b>${escBtn(b.icon||'')} ${escBtn(b.label)}</b><div class="muted">Orden ${i+1} · ${b.active?'Visible':'Oculto'} · ${placeName(b.placement)}</div></div><button class="btn" onclick="toggleAppButton('${b.id}',${!b.active})">${b.active?'Ocultar':'Mostrar'}</button></div><div class="admin-actions"><button class="btn" onclick="editAppButton('${b.id}')">Editar</button><button class="btn" onclick="moveAppButton('${b.id}',-1)">↑</button><button class="btn" onclick="moveAppButton('${b.id}',1)">↓</button>${locked?'':`<button class="btn danger" onclick="deleteAppButton('${b.id}')">Eliminar</button>`}</div></div>`}
+
+  function row(b,i){let locked=!!b.system_key;return `<div class="admin-item"><div class="row"><div><b>${escBtn(b.icon||'')} ${escBtn(b.label)}</b><div class="muted">Orden ${i+1} · ${b.active?'Visible':'Oculto'} · ${placeName(b.placement)}</div><div class="muted">Botón ${sizeOf(b)} · Icono ${iconOf(b)}</div></div><button class="btn" onclick="toggleAppButton('${b.id}',${!b.active})">${b.active?'Ocultar':'Mostrar'}</button></div><div class="admin-actions"><button class="btn" onclick="editAppButton('${b.id}')">Editar</button><button class="btn" onclick="moveAppButton('${b.id}',-1)">↑</button><button class="btn" onclick="moveAppButton('${b.id}',1)">↓</button>${locked?'':`<button class="btn danger" onclick="deleteAppButton('${b.id}')">Eliminar</button>`}</div></div>`}
+
   window.loadAdminButtons=async()=>{ensureAdminUI();let box=document.getElementById('adminButtonsList');if(!box)return;box.innerHTML='Cargando…';const {data,error}=await client.from('app_buttons').select('*').order('placement').order('sort_order');if(error){box.innerHTML='<div class="error">No se pudieron cargar los botones.</div>';return}appButtons=data||[];box.innerHTML=appButtons.map((b,i)=>row(b,i)).join('')||'No hay botones.'};
-  window.addAppButtonAdmin=async()=>{let label=btnLabel.value.trim(),icon=btnIcon.value.trim(),placement=btnPlacement.value,action_type=btnActionType.value,action_value=btnActionValue.value.trim()||null,style=btnStyle.value;if(!label)return adminMessage('Escribe el nombre.',true);const {data:r}=await client.from('app_buttons').select('sort_order').eq('placement',placement).order('sort_order',{ascending:false}).limit(1);const {error}=await client.from('app_buttons').insert({label,icon:icon||null,placement,action_type,action_value,style,active:true,visible:true,sort_order:(r?.[0]?.sort_order||0)+1});if(error)return adminMessage('No se pudo crear.',true);btnLabel.value=btnIcon.value=btnActionValue.value='';await loadAdminButtons();await loadPublic();adminMessage('Botón creado. ✅')};
+
+  window.addAppButtonAdmin=async()=>{
+    let label=btnLabel.value.trim(),icon=btnIcon.value.trim(),placement=btnPlacement.value,action_type=btnActionType.value,action_value=btnActionValue.value.trim()||null,style=btnStyle.value,button_size=Math.max(32,Math.min(120,Number(btnButtonSize.value||50))),icon_size=Math.max(12,Math.min(64,Number(btnIconSize.value||24)));
+    if(!label)return adminMessage('Escribe el nombre.',true);
+    const {data:r}=await client.from('app_buttons').select('sort_order').eq('placement',placement).order('sort_order',{ascending:false}).limit(1);
+    const {error}=await client.from('app_buttons').insert({label,icon:icon||null,placement,action_type,action_value,style,button_size,icon_size,active:true,visible:true,sort_order:(r?.[0]?.sort_order||0)+1});
+    if(error)return adminMessage('No se pudo crear.',true);
+    btnLabel.value=btnIcon.value=btnActionValue.value='';btnButtonSize.value='50';btnIconSize.value='24';
+    await loadAdminButtons();await loadPublic();adminMessage('Botón creado. ✅');
+  };
+
   window.toggleAppButton=async(id,active)=>{let {error}=await client.from('app_buttons').update({active,visible:active}).eq('id',id);if(error)return adminMessage('No se pudo actualizar.',true);await loadAdminButtons();await loadPublic()};
-  window.editAppButton=async id=>{const {data:b,error}=await client.from('app_buttons').select('*').eq('id',id).single();if(error||!b)return;let label=prompt('Nombre:',b.label||'');if(label===null||!label.trim())return;let icon=prompt('Icono:',b.icon||'');if(icon===null)return;let placement=prompt('Ubicación: home = Inicio, nav = barra inferior, top = barra superior',b.placement||'home');if(placement===null)return;placement=placement.trim().toLowerCase();if(!['home','nav','top'].includes(placement))return adminMessage('Ubicación no válida. Usa home, nav o top.',true);let type=prompt('Acción: catalog, category, product, cart, home, url o none',b.action_type||'catalog');if(type===null)return;type=type.trim();if(!['catalog','category','product','cart','home','url','none'].includes(type))return adminMessage('Acción no válida.',true);let value=prompt('Destino (puede quedar vacío):',b.action_value||'');if(value===null)return;let style=prompt('Estilo: normal o primary',b.style||'normal');if(style===null)return;style=style.trim();if(!['normal','primary'].includes(style))return adminMessage('Estilo no válido.',true);let {error:u}=await client.from('app_buttons').update({label:label.trim(),icon:icon.trim()||null,placement,action_type:type,action_value:value.trim()||null,style}).eq('id',id);if(u)return adminMessage('No se pudo editar.',true);await loadAdminButtons();await loadPublic();adminMessage('Botón actualizado. ✅')};
+
+  window.editAppButton=async id=>{
+    const {data:b,error}=await client.from('app_buttons').select('*').eq('id',id).single();if(error||!b)return;
+    let label=prompt('Nombre:',b.label||'');if(label===null||!label.trim())return;
+    let icon=prompt('Icono:',b.icon||'');if(icon===null)return;
+    let placement=prompt('Ubicación: home = Inicio, nav = barra inferior, top = barra superior',b.placement||'home');if(placement===null)return;placement=placement.trim().toLowerCase();if(!['home','nav','top'].includes(placement))return adminMessage('Ubicación no válida. Usa home, nav o top.',true);
+    let type=prompt('Acción: catalog, category, product, cart, home, url o none',b.action_type||'catalog');if(type===null)return;type=type.trim();if(!['catalog','category','product','cart','home','url','none'].includes(type))return adminMessage('Acción no válida.',true);
+    let value=prompt('Destino (puede quedar vacío):',b.action_value||'');if(value===null)return;
+    let style=prompt('Estilo: normal o primary',b.style||'normal');if(style===null)return;style=style.trim();if(!['normal','primary'].includes(style))return adminMessage('Estilo no válido.',true);
+    let bs=prompt('Tamaño del botón (32 a 120):',String(sizeOf(b)));if(bs===null)return;bs=Math.max(32,Math.min(120,Number(bs)||50));
+    let is=prompt('Tamaño del icono (12 a 64):',String(iconOf(b)));if(is===null)return;is=Math.max(12,Math.min(64,Number(is)||24));
+    let {error:u}=await client.from('app_buttons').update({label:label.trim(),icon:icon.trim()||null,placement,action_type:type,action_value:value.trim()||null,style,button_size:bs,icon_size:is}).eq('id',id);
+    if(u)return adminMessage('No se pudo editar.',true);
+    await loadAdminButtons();await loadPublic();adminMessage('Botón actualizado. ✅');
+  };
+
   window.deleteAppButton=async id=>{let {data:b}=await client.from('app_buttons').select('system_key').eq('id',id).single();if(b?.system_key)return adminMessage('Los botones principales no se eliminan; puedes moverlos u ocultarlos.',true);if(!confirm('¿Eliminar este botón?'))return;await client.from('app_buttons').delete().eq('id',id);await loadAdminButtons();await loadPublic()};
   window.moveAppButton=async(id,d)=>{let {data:c}=await client.from('app_buttons').select('id,placement,sort_order').eq('id',id).single();if(!c)return;let {data:r}=await client.from('app_buttons').select('id,sort_order').eq('placement',c.placement).order('sort_order');let i=r.findIndex(x=>String(x.id)===String(id)),j=i+d;if(i<0||j<0||j>=r.length)return;await client.from('app_buttons').update({sort_order:r[j].sort_order}).eq('id',r[i].id);await client.from('app_buttons').update({sort_order:r[i].sort_order}).eq('id',r[j].id);await loadAdminButtons();await loadPublic()};
+
   function wrap(){if(typeof adminTab==='function'&&!window.__btnTab){let o=adminTab;window.adminTab=adminTab=function(n,b){o(n,b);if(n==='buttons')loadAdminButtons()};window.__btnTab=1}if(typeof show==='function'&&!window.__btnShow){let o=show;window.show=show=function(i){let r=o(i);setTimeout(refreshActive,0);return r};window.__btnShow=1}}
-  function init(){ensureStyles();ensureAreas();ensureAdminUI();wrap();loadPublic()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  function init(){ensureStyles();ensureAreas();ensureAdminUI();wrap();loadPublic()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

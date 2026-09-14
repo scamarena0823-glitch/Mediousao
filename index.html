@@ -4,14 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MEDIOUSAO</title>
-<style>*{box-sizing:border-box}body{margin:0;background:#f2f3f5;color:#111;font-family:Arial,sans-serif}.app{max-width:480px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 35px rgba(0,0,0,.08)}header{padding:20px 18px 14px;background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid #e7e7ea}.logo{font-size:29px;font-weight:950;letter-spacing:-1px}.logo .medio{color:#111}.logo .usao{color:#e50914}.sub{color:#777;margin-top:4px;font-size:13px}.brandline{height:3px;width:92px;background:#e50914;margin-top:8px;border-radius:10px}.search,input{width:100%;padding:13px;border-radius:12px;border:1px solid #dedfe3;background:#f7f7f8;color:#111;font-size:16px}.search{margin-top:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{overflow:hidden;background:#fff;border:1px solid #e4e4e7;border-radius:17px;box-shadow:0 5px 18px rgba(0,0,0,.06)}.photo{height:155px;background:#f0f1f3;display:flex;align-items:center;justify-content:center;font-size:55px;overflow:hidden}.photo img,.detailphoto img{width:100%;height:100%;object-fit:cover}.info{padding:12px}.name{font-weight:800}.tag{color:#777;font-size:13px;margin-top:5px}.price{font-weight:900;font-size:18px;margin:8px 0}.btn{border:0;border-radius:11px;padding:12px 15px;background:#ededf0;color:#111;font-weight:800;font-size:15px}.btn.red{background:#e50914;color:#fff}.btn.dark{background:#111;color:#fff}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.filters select{width:100%;padding:11px;border-radius:11px;border:1px solid #ddd;background:#fff;font-size:14px}.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}.choice{border:1px solid #ddd;border-radius:12px;padding:12px;background:#fff;text-align:left;font-weight:800}.choice.on{border-color:#e50914;box-shadow:0 0 0 2px rgba(229,9,20,.08)}.primary{background:#e50914;color:#fff}.full{width:100%}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.screen{display:none}.active{display:block}.section{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}main{padding:14px 18px 90px}.hero,.box,.notice{background:#fff;border:1px solid #e4e4e7;border-radius:17px;box-shadow:0 5px 18px rgba(0,0,0,.05)}.hero{padding:20px;margin-bottom:18px}.hero h1{font-size:29px;margin:0 0 8px}.muted{color:#777;font-size:14px}nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid #ddd;padding:10px;z-index:8;backdrop-filter:blur(8px)}nav button{background:none;border:0;color:#777;font-weight:700}nav .on{color:#e50914}.notice{padding:12px;color:#555;margin:10px 0;font-size:14px}.error{padding:14px;border-radius:11px;background:#fff0f0;color:#b0000a;margin:12px 0;border:1px solid #ffd0d0}.detailphoto{height:300px;border-radius:17px;background:#f0f1f3;display:flex;align-items:center;justify-content:center;font-size:100px;overflow:hidden}.qty{display:flex;align-items:center;gap:10px}.qty button{width:34px;height:34px;border-radius:9px;border:1px solid #ddd;background:#f4f4f5;color:#111}.admin-item{padding:12px 0;border-bottom:1px solid #e5e5e7}.status-pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800;background:#f1f1f3}.status-pill.red{background:#ffe8e8;color:#b0000a}.status-pill.green{background:#e8f8eb;color:#187a2b}.admin-item:last-child{border-bottom:0}.category-bar{display:flex;gap:8px;overflow:auto;padding:4px 0 12px;scrollbar-width:none}.category-bar::-webkit-scrollbar{display:none}.category-chip{white-space:nowrap;border:1px solid #ddd;border-radius:999px;padding:10px 14px;background:#fff;font-weight:800}.category-chip.on{background:#111;color:#fff;border-color:#111}.admin-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px}.admin-tab{padding:10px 6px;border:1px solid #ddd;border-radius:11px;background:#fff;font-weight:800}.admin-tab.on{background:#111;color:#fff}.admin-panel{display:none}.admin-panel.on{display:block}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.switch{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.switch:last-child{border-bottom:0}.thumb{width:58px;height:58px;border-radius:10px;object-fit:cover;background:#f0f1f3}.admin-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.danger{background:#fff0f0;color:#b0000a}.success{background:#eefaf0;color:#187a2b}/* MEDIOUSAO: hide global cancel reservation control */
-#reservationCancelSlot{display:none!important;}
-</style>
+<style>*{box-sizing:border-box}body{margin:0;background:#f2f3f5;color:#111;font-family:Arial,sans-serif}.app{max-width:480px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 35px rgba(0,0,0,.08)}header{padding:20px 18px 14px;background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid #e7e7ea}.logo{font-size:29px;font-weight:950;letter-spacing:-1px}.logo .medio{color:#111}.logo .usao{color:#e50914}.sub{color:#777;margin-top:4px;font-size:13px}.brandline{height:3px;width:92px;background:#e50914;margin-top:8px;border-radius:10px}.search,input{width:100%;padding:13px;border-radius:12px;border:1px solid #dedfe3;background:#f7f7f8;color:#111;font-size:16px}.search{margin-top:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{overflow:hidden;background:#fff;border:1px solid #e4e4e7;border-radius:17px;box-shadow:0 5px 18px rgba(0,0,0,.06)}.photo{height:155px;background:#f0f1f3;display:flex;align-items:center;justify-content:center;font-size:55px;overflow:hidden}.photo img,.detailphoto img{width:100%;height:100%;object-fit:cover}.info{padding:12px}.name{font-weight:800}.tag{color:#777;font-size:13px;margin-top:5px}.price{font-weight:900;font-size:18px;margin:8px 0}.btn{border:0;border-radius:11px;padding:12px 15px;background:#ededf0;color:#111;font-weight:800;font-size:15px}.btn.red{background:#e50914;color:#fff}.btn.dark{background:#111;color:#fff}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.filters select{width:100%;padding:11px;border-radius:11px;border:1px solid #ddd;background:#fff;font-size:14px}.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}.choice{border:1px solid #ddd;border-radius:12px;padding:12px;background:#fff;text-align:left;font-weight:800}.choice.on{border-color:#e50914;box-shadow:0 0 0 2px rgba(229,9,20,.08)}.primary{background:#e50914;color:#fff}.full{width:100%}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.screen{display:none}.active{display:block}.section{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}main{padding:14px 18px 90px}.hero,.box,.notice{background:#fff;border:1px solid #e4e4e7;border-radius:17px;box-shadow:0 5px 18px rgba(0,0,0,.05)}.hero{padding:20px;margin-bottom:18px}.hero h1{font-size:29px;margin:0 0 8px}.muted{color:#777;font-size:14px}nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid #ddd;padding:10px;z-index:8;backdrop-filter:blur(8px)}nav button{background:none;border:0;color:#777;font-weight:700}nav .on{color:#e50914}.notice{padding:12px;color:#555;margin:10px 0;font-size:14px}.error{padding:14px;border-radius:11px;background:#fff0f0;color:#b0000a;margin:12px 0;border:1px solid #ffd0d0}.detailphoto{height:300px;border-radius:17px;background:#f0f1f3;display:flex;align-items:center;justify-content:center;font-size:100px;overflow:hidden}.qty{display:flex;align-items:center;gap:10px}.qty button{width:34px;height:34px;border-radius:9px;border:1px solid #ddd;background:#f4f4f5;color:#111}.admin-item{padding:12px 0;border-bottom:1px solid #e5e5e7}.status-pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800;background:#f1f1f3}.status-pill.red{background:#ffe8e8;color:#b0000a}.status-pill.green{background:#e8f8eb;color:#187a2b}.admin-item:last-child{border-bottom:0}.category-bar{display:flex;gap:8px;overflow:auto;padding:4px 0 12px;scrollbar-width:none}.category-bar::-webkit-scrollbar{display:none}.category-chip{white-space:nowrap;border:1px solid #ddd;border-radius:999px;padding:10px 14px;background:#fff;font-weight:800}.category-chip.on{background:#111;color:#fff;border-color:#111}.admin-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px}.admin-tab{padding:10px 6px;border:1px solid #ddd;border-radius:11px;background:#fff;font-weight:800}.admin-tab.on{background:#111;color:#fff}.admin-panel{display:none}.admin-panel.on{display:block}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.switch{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.switch:last-child{border-bottom:0}.thumb{width:58px;height:58px;border-radius:10px;object-fit:cover;background:#f0f1f3}.admin-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.danger{background:#fff0f0;color:#b0000a}.success{background:#eefaf0;color:#187a2b}</style>
 </head>
 <body>
 <div class="app">
 <header><div class="logo" id="appLogo"><span class="medio">MEDIO</span><span class="usao">USAO</span></div><div class="sub" id="appSubtitle">Estilo real. Precios reales.</div><div class="brandline"></div>
-<input id="search" class="search" placeholder="Buscar tenis, ropa, marcas..." oninput="render()"><button class="btn" style="margin-top:10px;width:100%" onclick="show('adminLogin')">🔐 Panel de administrador</button></header>
+<input id="search" class="search" placeholder="Buscar tenis, ropa, marcas..." oninput="render()"></header>
 <main>
 <section id="home" class="screen active">
 <div class="hero" id="homeHero"><h1 id="homeTitle">Moda usada que se ve nueva. 🔥</h1><p class="muted" id="homeSubtitle">Tenis, ropa y accesorios seleccionados.</p><button class="btn primary" onclick="show('catalog')">Ver catálogo</button></div>
@@ -281,6 +279,7 @@ async function saveDeliveryFlag(){adminMessage('Configuración de delivery prepa
 
 function saveCart(){localStorage.setItem("mediousao_cart_v1",JSON.stringify(cart));document.getElementById("cartCount").textContent=cart.reduce((a,x)=>a+x.qty,0)}
 function show(id){
+ if(id==="admin"&&!adminUser){id="adminLogin";}
  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  ["navHome","navCatalog","navCart"].forEach(x=>{const el=document.getElementById(x);if(el)el.classList.remove("on")});
@@ -400,6 +399,7 @@ async function adminLogin(){
 async function adminLogout(){
   await client.auth.signOut();
   adminUser=null;
+  history.replaceState({},"",location.pathname);
   show("home");
 }
 
@@ -626,7 +626,30 @@ async function saveGeneralSettings(){
 async function loadGeneralSettings(){try{const x=await getAppSettings();document.getElementById("configDelivery").checked=x.delivery_enabled!==false;document.getElementById("configPickup").checked=x.pickup_enabled!==false;document.getElementById("configBusinessName").value=x.app_name||"MEDIOUSAO";document.getElementById("configGeneralMessage").value=x.general_message||"";applyCommerceSettings(x);}catch(e){console.error(e)}}
 
 
-saveCart();loadCategories();loadBanners();loadAppearance();loadProducts();
+async function initPrivateAdminAccess(){
+  const wantsAdmin=new URLSearchParams(location.search).get("admin")==="1";
+  if(!wantsAdmin)return;
+  show("adminLogin");
+  try{
+    const {data}=await client.auth.getSession();
+    const user=data?.session?.user;
+    if(!user)return;
+    const email=String(user.email||"").trim().toLowerCase();
+    const {data:admin,error}=await client.from("admins").select("email").eq("email",email).maybeSingle();
+    if(error||!admin){await client.auth.signOut();return;}
+    adminUser=user;
+    show("admin");
+    await loadAdminProducts();
+    await loadAdminOrders();
+    await loadAdminCategories();
+    refreshProductCategoryOptions();
+    await loadAdminBanners();
+    await loadAppearanceForm();
+  }catch(e){console.error(e);}
+}
+
+
+saveCart();loadCategories();loadBanners();loadAppearance();loadProducts();initPrivateAdminAccess();
 </script>
 </body>
 </html>

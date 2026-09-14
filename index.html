@@ -671,5 +671,24 @@ async function initPrivateAdminAccess(){
 
 saveCart();loadCategories();loadBanners();loadAppearance();loadProducts();initPrivateAdminAccess();
 </script>
+
+<script id="mediousao-explore-category-script">
+(function(){
+  function setup(){
+    const wrap=document.getElementById('mediousaoExploreCategories');
+    const select=document.getElementById('categoryFilter');
+    if(!wrap||!select)return;
+    const buttons=wrap.querySelectorAll('button[data-category]');
+    function choose(value){
+      select.value=value;
+      buttons.forEach(b=>b.classList.toggle('active',b.dataset.category===value));
+      if(typeof render==='function')render();
+    }
+    buttons.forEach(b=>b.onclick=()=>choose(b.dataset.category));
+    if(!select.value)buttons[0]?.classList.add('active');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
+})();
+</script>
 </body>
 </html>

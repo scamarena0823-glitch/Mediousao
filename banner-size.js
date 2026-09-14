@@ -12,7 +12,7 @@
     const image=document.getElementById('bannerImage');
     if(!image||document.getElementById('bannerUploadBtn'))return;
     const box=document.createElement('div');box.style.margin='-2px 0 8px';
-    box.innerHTML='<input id="bannerUploadFile" type="file" accept="image/*" style="display:none"><button id="bannerUploadBtn" type="button" class="btn full">📷 Subir imagen desde el teléfono</button><div id="bannerUploadMsg" class="muted" style="margin-top:6px"></div>';
+    box.innerHTML='<input id="bannerUploadFile" type="file" accept="image/*" style="display:none"><button id="bannerUploadBtn" type="button" class="btn full">📷 Subir imagen</button><div id="bannerUploadMsg" class="muted" style="margin-top:6px"></div>';
     image.insertAdjacentElement('afterend',box);
     document.getElementById('bannerUploadBtn').onclick=()=>document.getElementById('bannerUploadFile').click();
     document.getElementById('bannerUploadFile').onchange=uploadBannerImage;

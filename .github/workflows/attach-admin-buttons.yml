@@ -13,18 +13,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Attach admin-buttons.js
+      - name: Attach MEDIOUSAO modules
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          tag = '<script src="admin-buttons.js"></script>'
-          if tag not in s:
-              marker = '</body>'
-              if marker not in s:
-                  raise SystemExit('No se encontró </body> en index.html')
-              s = s.replace(marker, tag + '\n' + marker, 1)
+          marker = '</body>'
+          if marker not in s:
+              raise SystemExit('No se encontró </body> en index.html')
+          tags = [
+              '<script src="admin-buttons.js"></script>',
+              '<script src="appearance-header.js"></script>',
+          ]
+          changed = False
+          for tag in tags:
+              if tag not in s:
+                  s = s.replace(marker, tag + '\n' + marker, 1)
+                  changed = True
+          if changed:
               p.write_text(s, encoding='utf-8')
           PY
       - name: Commit if changed
@@ -36,5 +43,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Enable admin button manager"
+          git commit -m "Enable MEDIOUSAO admin modules"
           git push

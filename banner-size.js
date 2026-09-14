@@ -9,14 +9,13 @@
     action.insertAdjacentElement('afterend',wrap);
   }
   function dims(){return {width_percent:clamp(document.getElementById('bannerWidth')?.value,30,100,100),height_px:clamp(document.getElementById('bannerHeight')?.value,80,600,210)}}
-  function applyBannerSizes(){
-    document.querySelectorAll('#homeBanners .hero[data-banner-id],#exploreBanners .hero[data-banner-id]').forEach(()=>{});
-  }
   function renderSized(list,placement){
     return (list||[]).filter(b=>b.placement===placement||b.placement==='both').map(b=>{
       const w=clamp(b.width_percent,30,100,100),h=clamp(b.height_px,80,600,210);
       const click=`bannerAction(${JSON.stringify(b).replace(/"/g,'&quot;')})`;
-      return `<div class="hero" style="padding:0;overflow:hidden;margin:0 auto 12px;width:${w}%;height:${h}px;position:relative" onclick="${click}">${b.image_url?`<img src="${esc(b.image_url)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`:''}<div style="position:absolute;left:0;right:0;bottom:0;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff"><b>${esc(b.title||'')}</b>${b.text?`<div style="font-size:13px;margin-top:3px">${esc(b.text)}</div>`:''}</div></div>`;
+      const title=(b.title||'').trim(),text=(b.text||'').trim();
+      const overlay=(title||text)?`<div style="position:absolute;left:0;right:0;bottom:0;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff">${title?`<b>${esc(title)}</b>`:''}${text?`<div style="font-size:13px;margin-top:3px">${esc(text)}</div>`:''}</div>`:'';
+      return `<div class="hero" style="padding:0;overflow:hidden;margin:0 auto 12px;width:${w}%;height:${h}px;position:relative" onclick="${click}">${b.image_url?`<img src="${esc(b.image_url)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`:''}${overlay}</div>`;
     }).join('');
   }
   async function sizedLoadBanners(){
@@ -25,7 +24,7 @@
   }
   async function sizedAdd(){
     const title=document.getElementById('bannerTitle').value.trim(),text=document.getElementById('bannerText').value.trim(),image_url=document.getElementById('bannerImage').value.trim();
-    if(!title||!image_url)return adminMessage('Completa título e imagen del banner.',true);
+    if(!image_url)return adminMessage('Completa la imagen del banner.',true);
     const d=dims();const {data:last}=await client.from('banners').select('sort_order').order('sort_order',{ascending:false}).limit(1);
     const {error}=await client.from('banners').insert({title,text,image_url,placement:document.getElementById('bannerPlacement').value,action_type:document.getElementById('bannerActionType').value,action_value:document.getElementById('bannerActionValue').value.trim()||null,active:true,sort_order:(last?.[0]?.sort_order||0)+1,...d});
     if(error)return adminMessage('No se pudo agregar el banner.',true);
@@ -33,7 +32,7 @@
   }
   async function sizedEdit(id){
     const {data}=await client.from('banners').select('*').eq('id',id).single();if(!data)return adminMessage('No se encontró el banner.',true);
-    const title=prompt('Título:',data.title||'');if(title===null)return;const text=prompt('Texto:',data.text||'');if(text===null)return;const image=prompt('URL de imagen:',data.image_url||'');if(image===null)return;
+    const title=prompt('Título (opcional):',data.title||'');if(title===null)return;const text=prompt('Texto (opcional):',data.text||'');if(text===null)return;const image=prompt('URL de imagen:',data.image_url||'');if(image===null)return;if(!image.trim())return adminMessage('La imagen del banner es obligatoria.',true);
     const placement=prompt('Ubicación: home = Inicio, explore = Explorar, both = ambos',data.placement||'home');if(placement===null||!['home','explore','both'].includes(placement.trim()))return adminMessage('Ubicación no válida.',true);
     const action_type=prompt('Acción: none, category, product o url',data.action_type||'none');if(action_type===null||!['none','category','product','url'].includes(action_type.trim()))return adminMessage('Acción no válida.',true);
     const action_value=prompt('Valor de acción (opcional):',data.action_value||'');if(action_value===null)return;

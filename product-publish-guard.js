@@ -2,10 +2,25 @@
 (function(){
   let publishing=false, decorating=false;
 
+  function prepareTypeSelector(){
+    const s=document.getElementById('pType');
+    if(!s||s.dataset.requiredType==='1')return;
+    s.innerHTML='<option value="" selected disabled>Estado</option><option value="new">Nuevo</option><option value="used">Usado</option>';
+    s.value='';
+    s.dataset.requiredType='1';
+  }
+
   function installPublishGuard(){
     if(typeof window.addProductAdmin!=='function'||window.__productPublishGuard)return;
     const original=window.addProductAdmin;
     window.addProductAdmin=async function(){
+      const type=document.getElementById('pType');
+      if(!type?.value){
+        if(typeof adminMessage==='function')adminMessage('Selecciona si el producto es Nuevo o Usado.',true);
+        else alert('Selecciona si el producto es Nuevo o Usado.');
+        type?.focus();
+        return;
+      }
       if(publishing)return;
       publishing=true;
       const btn=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Publicar producto');
@@ -61,6 +76,7 @@
   }
 
   function install(){
+    prepareTypeSelector();
     installPublishGuard();
     addDeleteButtons();
     const box=document.getElementById('adminProducts');

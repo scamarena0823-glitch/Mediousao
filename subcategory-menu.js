@@ -20,15 +20,23 @@
     const hidden=document.getElementById('pCategory'),select=document.getElementById('productCategorySelect');if(!hidden||!select)return;
     const oldType=document.getElementById('pSubcategory');if(oldType)oldType.style.display='none';
     const cats=()=>window.appCategories||[];
-    function mainMenu(){select.dataset.mode='main';select.innerHTML='<option value="">Categoría</option>'+cats().map(c=>`<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');if(hidden.value&&cats().some(c=>c.slug===hidden.value))select.value=hidden.value;}
-    async function subMenu(cat){const c=cats().find(x=>x.slug===cat);const list=await active(cat);select.dataset.mode='sub';select.innerHTML=`<option value="back">← ${esc(c?.name||cat)}</option>`+list.map(x=>`<option value="${esc(x.slug)}">${esc(x.name)}</option>`).join('');select.value='back';}
+    function mainMenu(){select.dataset.mode='main';select.innerHTML='<option value="">Categoría</option>'+cats().map(c=>`<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');select.value='';}
+    async function subMenu(cat){const c=cats().find(x=>x.slug===cat);const list=await active(cat);select.dataset.mode='sub';select.innerHTML=`<option value="" disabled selected>${esc(c?.name||cat)}</option>`+list.map(x=>`<option value="${esc(x.slug)}">${esc(x.name)}</option>`).join('')+`<option value="back">← Volver</option>`;return list;}
+    function openNativePicker(){
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        try{if(typeof select.showPicker==='function'){select.showPicker();return;}}catch(e){}
+        select.focus();
+        try{select.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true,view:window}));}catch(e){}
+        try{select.click();}catch(e){}
+      }));
+    }
     select.dataset.integratedBound='1';select.onchange=async function(){
       if(this.dataset.mode==='main'){
         const cat=this.value;if(!cat)return;hidden.value=cat;this.dataset.subcategory='';document.getElementById('pCategories')?.querySelectorAll('.p-cat').forEach(x=>x.checked=x.dataset.slug===cat);
-        try{const list=await active(cat);if(list.length){await subMenu(cat);setTimeout(()=>{select.focus();select.click();},50);}}catch(e){}
+        try{const list=await subMenu(cat);if(list.length)openNativePicker();else mainMenu();}catch(e){mainMenu();}
       }else{
-        if(this.value==='back'){this.dataset.subcategory='';mainMenu();return;}
-        this.dataset.subcategory=this.value;const old=document.getElementById('pSubcategory');if(old)old.value=this.value;
+        if(this.value==='back'){this.dataset.subcategory='';mainMenu();openNativePicker();return;}
+        if(!this.value)return;this.dataset.subcategory=this.value;const old=document.getElementById('pSubcategory');if(old)old.value=this.value;
       }
     };
     window.refreshIntegratedCategory=mainMenu;mainMenu();

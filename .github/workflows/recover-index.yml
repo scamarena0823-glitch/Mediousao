@@ -1,5 +1,7 @@
 name: Recover index
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
@@ -15,5 +17,5 @@ jobs:
           git config user.name github-actions
           git config user.email actions@github.com
           git add index.html
-          git commit -m "Restore index"
+          git commit -m "Restore index" || exit 0
           git push

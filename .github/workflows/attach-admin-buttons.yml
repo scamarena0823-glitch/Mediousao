@@ -41,6 +41,7 @@ jobs:
               '<script src="customer-account-layout.js"></script>',
               '<script src="customer-address-form.js"></script>',
               '<script src="admin-reservations-view.js"></script>',
+              '<script src="admin-order-image.js"></script>',
           ]
           changed = False
           for tag in tags:

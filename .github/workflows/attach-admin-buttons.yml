@@ -33,6 +33,7 @@ jobs:
               '<script src="product-edit.js"></script>',
               '<script src="product-sold.js"></script>',
               '<script src="order-sold-sync.js"></script>',
+              '<script src="customer-order-cancel.js"></script>',
           ]
           changed = False
           for tag in tags:

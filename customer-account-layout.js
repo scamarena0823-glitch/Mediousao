@@ -1,10 +1,19 @@
-/* MEDIOUSAO - Ajustes de Mi cuenta: nombre completo y guardar al final */
+/* MEDIOUSAO - Ajustes de Mi cuenta: nombre completo, teléfono y guardar al final */
 (function(){
+  function formatPhone(value){
+    const d=String(value||'').replace(/\D/g,'').slice(0,10);
+    if(!d) return '';
+    if(d.length<=3) return '('+d;
+    if(d.length<=6) return '('+d.slice(0,3)+') '+d.slice(3);
+    return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
+  }
+
   function apply(){
     const body=document.getElementById('mediousaoProfileBody');
     if(!body) return;
     const first=body.querySelector('#mpFirst');
     const last=body.querySelector('#mpLast');
+    const phone=body.querySelector('#mpPhone');
     const save=body.querySelector('#mpSaveProfile');
     const addressForm=body.querySelector('#mpAddressForm');
     if(!first||!last||!save||!addressForm) return;
@@ -24,10 +33,19 @@
         const parts=full.split(' ').filter(Boolean);
         first.value=parts.shift()||'';
         last.value=parts.join(' ');
-        setTimeout(function(){
-          first.value=full;
-        },0);
+        setTimeout(function(){first.value=full;},0);
       },true);
+    }
+
+    if(phone&&!phone.dataset.phoneFormatReady){
+      phone.dataset.phoneFormatReady='1';
+      phone.setAttribute('inputmode','numeric');
+      phone.setAttribute('maxlength','14');
+      phone.setAttribute('placeholder','(809) 345-5432');
+      phone.value=formatPhone(phone.value);
+      phone.addEventListener('input',function(){
+        this.value=formatPhone(this.value);
+      });
     }
 
     if(save.dataset.atBottom!=='1'){

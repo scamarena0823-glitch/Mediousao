@@ -27,6 +27,7 @@ jobs:
               '<script src="appearance-header.js"></script>',
               '<script src="product-upload.js"></script>',
               '<script src="product-publish-guard.js"></script>',
+              '<script src="product-audience.js"></script>',
           ]
           changed = False
           for tag in tags:

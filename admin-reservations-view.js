@@ -1,19 +1,43 @@
-/* MEDIOUSAO - Reservas separadas en ADM */
+/* MEDIOUSAO - Botón independiente de Reservas en ADM */
 (function(){
- function statusText(el){return String((el&&el.value)||(el&&el.textContent)||'').trim().toLowerCase();}
- function refresh(){
-  if(!location.search.includes('admin=1'))return;
-  var nodes=[].slice.call(document.querySelectorAll('select'));
-  var reserved=[];
-  nodes.forEach(function(s){if(statusText(s)==='reservado'){var c=s.closest('.card')||s.parentElement&&s.parentElement.parentElement;if(c&&reserved.indexOf(c)<0)reserved.push(c);}});
-  var heading=[].slice.call(document.querySelectorAll('h1,h2,h3')).find(function(h){return /pedidos|reservas/i.test(h.textContent||'');});
-  if(!heading)return;
-  var id='mediousaoReservationsSummary',box=document.getElementById(id);
-  if(!box){box=document.createElement('div');box.id=id;box.style.cssText='margin:12px 0;padding:14px;border:1px solid #333;border-radius:14px;background:#151515';heading.insertAdjacentElement('afterend',box);}
-  box.innerHTML='<div style="font-weight:800;font-size:18px">Reservas ('+reserved.length+')</div><div style="font-size:12px;opacity:.7;margin-top:4px">Reservas activas separadas de los pedidos</div>';
-  reserved.forEach(function(c){c.dataset.mediousaoReservation='1';});
+ const BTN_ID='mediousaoReservationsButton';
+ const PANEL_ID='mediousaoReservationsPanel';
+ function isAdmin(){return location.search.includes('admin=1')}
+ function cards(){
+   return [...document.querySelectorAll('select')].filter(s=>String(s.value||'').toLowerCase()==='reservado').map(s=>s.closest('.card')||s.closest('[class*="order"]')||s.parentElement).filter(Boolean);
  }
- var o=new MutationObserver(function(){clearTimeout(window.__medResT);window.__medResT=setTimeout(refresh,100)});
- function boot(){refresh();o.observe(document.body,{childList:true,subtree:true,characterData:true});}
+ function count(){return cards().length}
+ function adminButtons(){
+   return [...document.querySelectorAll('button')].filter(b=>/categorías|banners|apariencia|pedidos|clientes|notificaciones|pagos|config\.|botones/i.test(b.textContent||''));
+ }
+ function installButton(){
+   if(!isAdmin()||document.getElementById(BTN_ID))return;
+   const p=adminButtons().find(b=>/pedidos/i.test(b.textContent||''));
+   if(!p)return;
+   const b=document.createElement('button'); b.id=BTN_ID; b.type='button';
+   b.style.cssText=p.style.cssText;
+   b.className=p.className;
+   b.innerHTML='⏱️ Reservas (<span id="mediousaoReservationsCount">'+count()+'</span>)';
+   b.addEventListener('click',openReservations);
+   p.parentNode.insertBefore(b,p.nextSibling);
+ }
+ function openReservations(){
+   let panel=document.getElementById(PANEL_ID);
+   if(!panel){
+     panel=document.createElement('div'); panel.id=PANEL_ID;
+     panel.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;overflow:auto;padding:22px 18px 110px;color:#111';
+     document.body.appendChild(panel);
+   }
+   const rs=cards();
+   panel.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px"><h2 style="margin:0;font-size:30px">Reservas ('+rs.length+')</h2><button id="medResClose" style="border:0;border-radius:999px;padding:12px 18px;font-weight:800">Cerrar</button></div><div id="medResList"></div>';
+   document.getElementById('medResClose').onclick=()=>panel.remove();
+   const list=document.getElementById('medResList');
+   if(!rs.length){list.innerHTML='<div style="padding:28px 4px;opacity:.65">No hay reservas activas.</div>';return;}
+   rs.forEach(c=>{const clone=c.cloneNode(true); clone.style.marginBottom='14px'; list.appendChild(clone)});
+ }
+ function cleanupOld(){const x=document.getElementById('mediousaoReservationsSummary');if(x)x.remove()}
+ function refresh(){cleanupOld();installButton();const n=document.getElementById('mediousaoReservationsCount');if(n)n.textContent=count()}
+ const mo=new MutationObserver(()=>{clearTimeout(window.__medResTimer);window.__medResTimer=setTimeout(refresh,150)});
+ function boot(){if(!isAdmin())return;refresh();mo.observe(document.body,{childList:true,subtree:true});setInterval(refresh,2500)}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();

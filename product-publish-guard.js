@@ -10,6 +10,11 @@
     s.dataset.requiredType='1';
   }
 
+  function prepareOptionalName(){
+    const name=document.getElementById('pName');
+    if(name)name.placeholder='Nombre (opcional)';
+  }
+
   function installPublishGuard(){
     if(typeof window.addProductAdmin!=='function'||window.__productPublishGuard)return;
     const original=window.addProductAdmin;
@@ -21,6 +26,14 @@
         type?.focus();
         return;
       }
+      const name=document.getElementById('pName');
+      let automaticName=false;
+      if(name&&!name.value.trim()){
+        const categorySelect=document.getElementById('productCategorySelect');
+        const selectedText=categorySelect?.selectedOptions?.[0]?.textContent?.trim();
+        name.value=(selectedText&&selectedText!=='Categoría')?selectedText:'Producto';
+        automaticName=true;
+      }
       if(publishing)return;
       publishing=true;
       const btn=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Publicar producto');
@@ -28,6 +41,7 @@
       if(btn){btn.disabled=true;btn.textContent='Publicando…';}
       try{ await original.apply(this,arguments); }
       finally{
+        if(automaticName&&name)name.value='';
         setTimeout(()=>{
           publishing=false;
           if(btn){btn.disabled=false;btn.textContent=oldText||'Publicar producto';}
@@ -77,6 +91,7 @@
 
   function install(){
     prepareTypeSelector();
+    prepareOptionalName();
     installPublishGuard();
     addDeleteButtons();
     const box=document.getElementById('adminProducts');

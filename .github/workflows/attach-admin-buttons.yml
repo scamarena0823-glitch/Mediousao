@@ -29,6 +29,7 @@ jobs:
               '<script src="product-publish-guard.js"></script>',
               '<script src="product-audience.js"></script>',
               '<script src="product-category-selector.js"></script>',
+              '<script src="subcategory-menu.js"></script>',
           ]
           changed = False
           for tag in tags:

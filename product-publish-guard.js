@@ -17,13 +17,18 @@
   }
 
   function cleanParts(parts){return parts.filter(x=>String(x||'').trim()).map(x=>String(x).trim());}
-  function productMeta(p){return cleanParts([typeof labelType==='function'?labelType(p):'',typeof labelAudience==='function'?labelAudience(p):'']).join(' · ');}
-  function productDescription(p){
-    const parts=[];
-    if(p.size)parts.push('Talla '+p.size);
-    if(p.condition)parts.push(p.condition);
-    return cleanParts(parts).join(' · ');
+  function productLines(p){
+    const lines=[];
+    const state=typeof labelType==='function'?labelType(p):'';
+    const audience=typeof labelAudience==='function'?labelAudience(p):'';
+    if(state)lines.push(state);
+    if(audience)lines.push(audience);
+    if(p.size)lines.push('Talla: '+p.size);
+    if(p.condition)lines.push(p.condition);
+    return cleanParts(lines);
   }
+  function linesHtml(p){return productLines(p).map(x=>`<div class="tag" style="margin-top:5px">• ${esc(x)}</div>`).join('');}
+  function detailLinesHtml(p){return productLines(p).map(x=>`<div class="muted" style="margin-top:7px">• ${esc(x)}</div>`).join('');}
   function displayName(p){return p&&p.name!==NO_NAME_MARK?p.name:'';}
 
   function installCatalogPresentation(){
@@ -32,16 +37,15 @@
       window.card=function(p){
         const title=displayName(p);
         const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(title||'Producto')}" loading="lazy">`:icon(p);
-        const meta=productMeta(p),desc=productDescription(p);
-        return `<div class="card"><div class="photo" onclick="detail('${p.id}')">${photo}</div><div class="info">${title?`<div class="name">${esc(title)}</div>`:''}${meta?`<div class="tag">${esc(meta)}</div>`:''}${desc?`<div class="tag">${esc(desc)}</div>`:''}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="add('${p.id}')">Agregar</button></div></div>`;
+        return `<div class="card"><div class="photo" onclick="detail('${p.id}')">${photo}</div><div class="info">${title?`<div class="name">${esc(title)}</div>`:''}${linesHtml(p)}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="add('${p.id}')">Agregar</button></div></div>`;
       };
     }
     if(typeof window.detail==='function'){
       window.detail=function(id){
         const p=products.find(x=>x.id===id);if(!p)return;selectedProduct=p;
-        const title=displayName(p),meta=productMeta(p),desc=productDescription(p);
+        const title=displayName(p);
         const detailPhoto=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(title||'Producto')}">`:icon(p);
-        document.getElementById('detailContent').innerHTML=`<div class="detailphoto">${detailPhoto}</div>${title?`<h1>${esc(title)}</h1>`:''}${meta?`<p class="muted">${esc(meta)}</p>`:''}${desc?`<p class="muted">${esc(desc)}</p>`:''}<h2>${money(p.price)}</h2><div class="notice">Disponible · ${Number(p.stock)} unidad(es)<br><span class="muted">Puedes reservarlo por 24 horas para que nadie más lo compre.</span></div><button class="btn dark full" onclick="openReserve('${p.id}','delivery')">🛵 Reservar para delivery</button><button class="btn primary full" style="margin-top:8px" onclick="openReserve('${p.id}','pickup')">🏪 Reservar para recoger</button><button class="btn full" style="margin-top:8px" onclick="add('${p.id}')">Agregar al carrito</button>`;
+        document.getElementById('detailContent').innerHTML=`<div class="detailphoto">${detailPhoto}</div>${title?`<h1>${esc(title)}</h1>`:''}${detailLinesHtml(p)}<h2>${money(p.price)}</h2><div class="notice">Disponible · ${Number(p.stock)} unidad(es)<br><span class="muted">Puedes reservarlo por 24 horas para que nadie más lo compre.</span></div><button class="btn dark full" onclick="openReserve('${p.id}','delivery')">🛵 Reservar para delivery</button><button class="btn primary full" style="margin-top:8px" onclick="openReserve('${p.id}','pickup')">🏪 Reservar para recoger</button><button class="btn full" style="margin-top:8px" onclick="add('${p.id}')">Agregar al carrito</button>`;
         show('detail');
       };
     }

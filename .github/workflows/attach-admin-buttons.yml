@@ -39,6 +39,7 @@ jobs:
               '<script src="customer-profile.js"></script>',
               '<script src="customer-registration-simple.js"></script>',
               '<script src="customer-account-layout.js"></script>',
+              '<script src="customer-address-form.js"></script>',
           ]
           changed = False
           for tag in tags:

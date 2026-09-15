@@ -1,35 +1,43 @@
-/* MEDIOUSAO - una foto principal por pedido en ADM */
+/* MEDIOUSAO - foto principal única por pedido */
 (function(){
  const cache=new Map();
- async function getImage(orderNumber){
-  if(cache.has(orderNumber)) return cache.get(orderNumber);
+ function isAdmin(){return location.search.includes('admin=1')}
+ function num(t){const m=String(t||'').match(/\b(?:MED|FNY)-\d+\b/i);return m&&m[0]}
+ async function imageFor(n){
+  if(cache.has(n))return cache.get(n);
   try{
-   const o=await client.from('orders').select('id').eq('order_number',orderNumber).maybeSingle();
-   if(!o.data){cache.set(orderNumber,'');return ''}
-   const it=await client.from('order_items').select('product_id').eq('order_id',o.data.id).limit(1).maybeSingle();
-   if(!it.data||!it.data.product_id){cache.set(orderNumber,'');return ''}
-   const p=await client.from('products').select('image_url,images').eq('id',it.data.product_id).maybeSingle();
-   const img=p.data&&(p.data.image_url||((p.data.images||[])[0]))||'';
-   cache.set(orderNumber,img);return img;
+   const q=await client.from('orders').select('id').eq('order_number',n).maybeSingle();
+   if(!q.data)return '';
+   const items=await client.from('order_items').select('product_id').eq('order_id',q.data.id).limit(1);
+   const pid=items.data&&items.data[0]&&items.data[0].product_id;if(!pid)return '';
+   const p=await client.from('products').select('image_url,images').eq('id',pid).maybeSingle();
+   const d=p.data||{},src=(Array.isArray(d.images)&&d.images[0])||d.image_url||'';
+   cache.set(n,src);return src;
   }catch(e){return ''}
  }
- function orderNumber(text){const m=String(text||'').match(/\b(?:MED|FNY)-\d+\b/i);return m&&m[0]}
+ function fixTitle(){
+  [...document.querySelectorAll('h1,h2,h3')].forEach(h=>{
+   if((h.textContent||'').replace(/\s+/g,' ').trim()==='Pedidos / Reservas')h.textContent='Pedidos';
+  });
+ }
+ function orderBlocks(){
+  const all=[...document.querySelectorAll('div')].filter(e=>num(e.textContent));
+  return all.filter(e=>{
+   const n=num(e.textContent); if(!n)return false;
+   return ![...e.children].some(c=>num(c.textContent)===n);
+  });
+ }
  async function decorate(){
-  if(!location.search.includes('admin=1'))return;
-  const roots=[...document.querySelectorAll('.admin-item,.card')];
-  for(const root of roots){
-   if(root.dataset.medOrderImage==='1')continue;
-   const num=orderNumber(root.textContent); if(!num)continue;
-   root.dataset.medOrderImage='1';
-   const img=await getImage(num); if(!img)continue;
-   const pic=document.createElement('img');
-   pic.src=img;pic.alt='Foto principal del producto';pic.className='mediousao-order-main-image';
-   pic.style.cssText='width:72px;height:72px;object-fit:cover;border-radius:12px;display:block;margin:0 0 10px 0;border:1px solid #e4e4e7;background:#f2f3f5';
-   const target=root.querySelector('b,strong,h3,h4')||root.firstElementChild;
-   if(target) target.insertAdjacentElement('beforebegin',pic); else root.prepend(pic);
+  if(!isAdmin())return;fixTitle();
+  for(const block of orderBlocks()){
+   if(block.querySelector(':scope > .mediousao-order-main-image'))continue;
+   const n=num(block.textContent),src=await imageFor(n);if(!src)continue;
+   const pic=document.createElement('img');pic.className='mediousao-order-main-image';pic.src=src;pic.alt='Producto';
+   pic.style.cssText='width:78px;height:78px;object-fit:cover;border-radius:12px;display:block;margin:0 0 12px;border:1px solid #ddd;background:#f3f3f4';
+   block.prepend(pic);
   }
  }
- const mo=new MutationObserver(()=>{clearTimeout(window.__medOrderImgT);window.__medOrderImgT=setTimeout(decorate,180)});
- function boot(){decorate();mo.observe(document.body,{childList:true,subtree:true});setInterval(decorate,2500)}
+ const mo=new MutationObserver(()=>{clearTimeout(window.__medOrderImg2);window.__medOrderImg2=setTimeout(decorate,200)});
+ function boot(){decorate();mo.observe(document.body,{childList:true,subtree:true});setInterval(decorate,2000)}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();

@@ -14,20 +14,20 @@
       select.id='productCategorySelect';
       select.className='search';
       select.style.marginBottom='8px';
-      select.innerHTML='<option value="">Categoría</option>';
       box.insertAdjacentElement('beforebegin',select);
       select.addEventListener('change',function(){
         const slug=this.value;
         hidden.value=slug||'';
-        box.querySelectorAll('.p-cat').forEach(x=>{x.checked=(x.dataset.slug===slug||x.value===slug);});
+        box.querySelectorAll('.p-cat').forEach(x=>{x.checked=(x.dataset.slug===slug);});
       });
     }
-    const current=select.value;
     const rows=[...box.querySelectorAll('.p-cat')];
+    if(!rows.length)return;
+    const wanted=select.value||hidden.value||'';
     const seen=new Set();
     const options=['<option value="">Categoría</option>'];
     rows.forEach(x=>{
-      const slug=x.dataset.slug||x.value||'';
+      const slug=x.dataset.slug||'';
       if(!slug||seen.has(slug))return;
       seen.add(slug);
       const row=x.closest('label')||x.parentElement;
@@ -35,15 +35,20 @@
       options.push(`<option value="${String(slug).replace(/"/g,'&quot;')}">${name}</option>`);
     });
     select.innerHTML=options.join('');
-    if(current&&seen.has(current))select.value=current;
-    else if(hidden.value&&seen.has(hidden.value))select.value=hidden.value;
+    if(wanted&&seen.has(wanted)){
+      select.value=wanted;
+      hidden.value=wanted;
+      rows.forEach(x=>{x.checked=(x.dataset.slug===wanted);});
+    }else{
+      select.value='';hidden.value='';rows.forEach(x=>x.checked=false);
+    }
     box.style.setProperty('display','none','important');
   }
   function init(){
     build();
     const box=document.getElementById('pCategories');
-    if(box)new MutationObserver(()=>setTimeout(build,0)).observe(box,{childList:true,subtree:true});
-    setTimeout(build,300);setTimeout(build,800);setTimeout(build,1500);setTimeout(build,3000);
+    if(box)new MutationObserver(()=>setTimeout(build,20)).observe(box,{childList:true,subtree:true});
+    [300,800,1500,3000,5000].forEach(t=>setTimeout(build,t));
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

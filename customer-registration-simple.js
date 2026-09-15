@@ -9,7 +9,7 @@
     const phone=document.getElementById('mpAuthPhone');
     phone?.closest('.mp-field')?.remove();
     const firstLabel=first.closest('.mp-field')?.querySelector('label');
-    if(firstLabel)firstLabel.textContent='Nombre apellido';
+    if(firstLabel)firstLabel.textContent='Nombre y apellido';
     first.setAttribute('autocomplete','name');
     if(last)last.closest('.mp-field')?.remove();
     const password=document.getElementById('mpAuthPassword');

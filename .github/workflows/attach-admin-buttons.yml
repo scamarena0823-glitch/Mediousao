@@ -43,6 +43,7 @@ jobs:
               '<script src="admin-reservations-view.js"></script>',
               '<script src="admin-order-image.js"></script>',
               '<script src="customer-orders-tabs.js"></script>',
+              '<script src="checkout-phone-format.js"></script>',
           ]
           changed = False
           for tag in tags:

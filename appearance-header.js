@@ -1,5 +1,18 @@
 /* MEDIOUSAO - controles extra de Apariencia */
 (function(){
+  function ensureMobileAdminStyles(){
+    if(document.getElementById('mediousaoAdminMobileFix'))return;
+    const s=document.createElement('style');s.id='mediousaoAdminMobileFix';
+    s.textContent=`
+      #adminPanelProducts .box{max-width:100%;overflow:hidden}
+      #adminPanelProducts [id*="Categor"],#adminPanelProducts [class*="categor"],#adminPanelProducts [class*="Categor"]{max-width:100%}
+      #adminPanelProducts label{max-width:100%}
+      #adminPanelProducts input[type="checkbox"]{width:auto;max-width:42px;flex:0 0 auto}
+      #adminPanelProducts .category-option,#adminPanelProducts .category-choice{min-width:0;max-width:100%;overflow:hidden}
+      @media(max-width:520px){#adminPanelProducts .box{padding-left:14px!important;padding-right:14px!important}}
+    `;
+    document.head.appendChild(s);
+  }
   function ensureFields(){
     const panel=document.querySelector('#adminPanelAppearance .box');
     if(!panel||document.getElementById('setHeaderSubtitle'))return;
@@ -72,6 +85,6 @@
     return r;
   };
 
-  function init(){ensureFields();applyHeader(window.appSettings||{});fillHeaderForm(window.appSettings||{});}
+  function init(){ensureMobileAdminStyles();ensureFields();applyHeader(window.appSettings||{});fillHeaderForm(window.appSettings||{});}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

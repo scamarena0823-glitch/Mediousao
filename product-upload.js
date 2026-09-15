@@ -2,11 +2,12 @@
 (function(){
   function inject(){
     const image=document.getElementById('pImage');
-    if(!image||document.getElementById('productUploadBtn'))return;
+    const name=document.getElementById('pName');
+    if(!image||!name||document.getElementById('productUploadBtn'))return;
     const box=document.createElement('div');
-    box.style.margin='-2px 0 8px';
+    box.style.margin='0 0 8px';
     box.innerHTML='<input id="productUploadFile" type="file" accept="image/*" style="display:none"><button id="productUploadBtn" type="button" class="btn full">📷 Subir imagen</button><div id="productUploadMsg" class="muted" style="margin-top:6px"></div>';
-    image.insertAdjacentElement('afterend',box);
+    name.insertAdjacentElement('afterend',box);
     document.getElementById('productUploadBtn').onclick=()=>document.getElementById('productUploadFile').click();
     document.getElementById('productUploadFile').onchange=upload;
   }

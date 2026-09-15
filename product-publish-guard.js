@@ -17,18 +17,19 @@
   }
 
   function cleanParts(parts){return parts.filter(x=>String(x||'').trim()).map(x=>String(x).trim());}
-  function productLines(p){
-    const lines=[];
+  function productFacts(p){
+    const facts=[];
     const state=typeof labelType==='function'?labelType(p):'';
     const audience=typeof labelAudience==='function'?labelAudience(p):'';
-    if(state)lines.push(state);
-    if(audience)lines.push(audience);
-    if(p.size)lines.push('Talla: '+p.size);
-    if(p.condition)lines.push(p.condition);
-    return cleanParts(lines);
+    if(state)facts.push(state);
+    if(audience)facts.push(audience);
+    if(p.size)facts.push('Talla: '+p.size);
+    return cleanParts(facts);
   }
-  function linesHtml(p){return productLines(p).map(x=>`<div class="tag" style="margin-top:5px">• ${esc(x)}</div>`).join('');}
-  function detailLinesHtml(p){return productLines(p).map(x=>`<div class="muted" style="margin-top:7px">• ${esc(x)}</div>`).join('');}
+  function factsHtml(p){return productFacts(p).map(x=>`<div class="tag" style="margin-top:4px">${esc(x)}</div>`).join('');}
+  function descriptionHtml(p){return p.condition?`<div class="tag" style="margin-top:12px;line-height:1.45">${esc(p.condition)}</div>`:'';}
+  function detailFactsHtml(p){return productFacts(p).map(x=>`<div class="muted" style="margin-top:5px">${esc(x)}</div>`).join('');}
+  function detailDescriptionHtml(p){return p.condition?`<div class="muted" style="margin-top:14px;line-height:1.5">${esc(p.condition)}</div>`:'';}
   function displayName(p){return p&&p.name!==NO_NAME_MARK?p.name:'';}
 
   function installCatalogPresentation(){
@@ -37,7 +38,7 @@
       window.card=function(p){
         const title=displayName(p);
         const photo=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(title||'Producto')}" loading="lazy">`:icon(p);
-        return `<div class="card"><div class="photo" onclick="detail('${p.id}')">${photo}</div><div class="info">${title?`<div class="name">${esc(title)}</div>`:''}${linesHtml(p)}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="add('${p.id}')">Agregar</button></div></div>`;
+        return `<div class="card"><div class="photo" onclick="detail('${p.id}')">${photo}</div><div class="info">${title?`<div class="name">${esc(title)}</div>`:''}${factsHtml(p)}${descriptionHtml(p)}<div class="price">${money(p.price)}</div><button class="btn primary full" onclick="add('${p.id}')">Agregar</button></div></div>`;
       };
     }
     if(typeof window.detail==='function'){
@@ -45,7 +46,7 @@
         const p=products.find(x=>x.id===id);if(!p)return;selectedProduct=p;
         const title=displayName(p);
         const detailPhoto=p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(title||'Producto')}">`:icon(p);
-        document.getElementById('detailContent').innerHTML=`<div class="detailphoto">${detailPhoto}</div>${title?`<h1>${esc(title)}</h1>`:''}${detailLinesHtml(p)}<h2>${money(p.price)}</h2><div class="notice">Disponible · ${Number(p.stock)} unidad(es)<br><span class="muted">Puedes reservarlo por 24 horas para que nadie más lo compre.</span></div><button class="btn dark full" onclick="openReserve('${p.id}','delivery')">🛵 Reservar para delivery</button><button class="btn primary full" style="margin-top:8px" onclick="openReserve('${p.id}','pickup')">🏪 Reservar para recoger</button><button class="btn full" style="margin-top:8px" onclick="add('${p.id}')">Agregar al carrito</button>`;
+        document.getElementById('detailContent').innerHTML=`<div class="detailphoto">${detailPhoto}</div>${title?`<h1>${esc(title)}</h1>`:''}${detailFactsHtml(p)}${detailDescriptionHtml(p)}<h2>${money(p.price)}</h2><div class="notice">Disponible · ${Number(p.stock)} unidad(es)<br><span class="muted">Puedes reservarlo por 24 horas para que nadie más lo compre.</span></div><button class="btn dark full" onclick="openReserve('${p.id}','delivery')">🛵 Reservar para delivery</button><button class="btn primary full" style="margin-top:8px" onclick="openReserve('${p.id}','pickup')">🏪 Reservar para recoger</button><button class="btn full" style="margin-top:8px" onclick="add('${p.id}')">Agregar al carrito</button>`;
         show('detail');
       };
     }

@@ -1,6 +1,13 @@
 /* MEDIOUSAO - carga directa de imagen para Productos */
 (function(){
+  function customizeDescription(){
+    const field=document.getElementById('pCondition');
+    if(!field)return;
+    field.placeholder='Descripción';
+    field.setAttribute('aria-label','Descripción');
+  }
   function inject(){
+    customizeDescription();
     const image=document.getElementById('pImage');
     const name=document.getElementById('pName');
     if(!image||!name||document.getElementById('productUploadBtn'))return;
@@ -31,6 +38,6 @@
       if(typeof adminMessage==='function')adminMessage('No se pudo subir la imagen del producto.',true);
     }finally{btn.disabled=false;e.target.value='';}
   }
-  function init(){inject();setTimeout(inject,500);}
+  function init(){inject();setTimeout(inject,500);setTimeout(customizeDescription,1200);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

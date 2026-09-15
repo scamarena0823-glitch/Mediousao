@@ -36,6 +36,7 @@ jobs:
               '<script src="customer-order-cancel.js"></script>',
               '<script src="cart-fix.js"></script>',
               '<script src="checkout-fix.js"></script>',
+              '<script src="customer-profile.js"></script>',
           ]
           changed = False
           for tag in tags:

@@ -26,6 +26,7 @@ jobs:
               '<script src="admin-buttons.js"></script>',
               '<script src="appearance-header.js"></script>',
               '<script src="product-upload.js"></script>',
+              '<script src="product-publish-guard.js"></script>',
           ]
           changed = False
           for tag in tags:
@@ -42,7 +43,7 @@ jobs:
             exit 0
           fi
           git config user.name "github-actions[bot]"
-          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git commit -m "Enable MEDIOUSAO admin modules"
           git push

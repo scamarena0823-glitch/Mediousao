@@ -7,7 +7,7 @@
     const box=document.createElement('div');
     box.style.margin='0 0 8px';
     box.innerHTML='<input id="productUploadFile" type="file" accept="image/*" style="display:none"><button id="productUploadBtn" type="button" class="btn full">📷 Subir imagen</button><div id="productUploadMsg" class="muted" style="margin-top:6px"></div>';
-    name.insertAdjacentElement('afterend',box);
+    name.insertAdjacentElement('beforebegin',box);
     document.getElementById('productUploadBtn').onclick=()=>document.getElementById('productUploadFile').click();
     document.getElementById('productUploadFile').onchange=upload;
   }

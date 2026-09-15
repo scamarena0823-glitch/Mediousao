@@ -1,6 +1,9 @@
 /* MEDIOUSAO - Mis pedidos persistente: En proceso / Entregado / Cancelado */
 (function(){
  const HIDDEN='mediousao_hidden_customer_orders';
+ const RESET='mediousao_orders_eliminar_reset_v1';
+ /* Migración única: restaura pedidos ocultados durante las pruebas anteriores. */
+ if(!localStorage.getItem(RESET)){localStorage.removeItem(HIDDEN);localStorage.setItem(RESET,'1')}
  const hidden=()=>{try{return JSON.parse(localStorage.getItem(HIDDEN)||'[]')}catch(e){return[]}};
  const saveHidden=id=>{let a=hidden();if(!a.includes(id)){a.push(id);localStorage.setItem(HIDDEN,JSON.stringify(a))}};
  const orderNo=c=>((c.textContent||'').match(/(?:MED|FNY)-\d+/i)||[])[0]||'';

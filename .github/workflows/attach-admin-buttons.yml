@@ -42,9 +42,13 @@ jobs:
               '<script src="customer-address-form.js"></script>',
               '<script src="admin-reservations-view.js"></script>',
               '<script src="admin-order-image.js"></script>',
-              '<script src="customer-orders-tabs.js"></script>',
           ]
+          remove_tags = ['<script src="customer-orders-tabs.js"></script>']
           changed = False
+          for tag in remove_tags:
+              if tag in s:
+                  s = s.replace(tag + '\n','').replace(tag,'')
+                  changed = True
           for tag in tags:
               if tag not in s:
                   s = s.replace(marker, tag + '\n' + marker, 1)

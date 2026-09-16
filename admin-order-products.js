@@ -2,14 +2,23 @@
 (function(){
  const money=n=>'RD$'+Number(n||0).toLocaleString('es-DO');
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const orderNoFrom=el=>((el?.textContent||'').match(/\b(?:MED|FNY)-\d+\b/i)||[])[0]||'';
+ const cleanOrderNo=s=>{const m=String(s||'').match(/\b(?:MED|FNY)-\d{6}\b/i);return m?m[0].toUpperCase():''};
  function findOrderButton(target){const b=target.closest('button');if(!b||!/ver productos/i.test(b.textContent||''))return null;return b}
- function orderNoForButton(btn){let el=btn;for(let i=0;i<8&&el;i++,el=el.parentElement){const n=orderNoFrom(el);if(n)return n}return''}
+ function orderNoForButton(btn){
+  let el=btn;
+  for(let i=0;i<8&&el;i++,el=el.parentElement){
+   const n=cleanOrderNo(el.textContent||'');
+   if(n)return n;
+  }
+  return'';
+ }
  function close(){document.getElementById('mediousaoOrderProductsModal')?.remove()}
  function modal(title,body){close();const m=document.createElement('div');m.id='mediousaoOrderProductsModal';m.style.cssText='position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:12px';m.innerHTML='<div style="width:min(480px,100%);max-height:82vh;overflow:auto;background:#fff;border-radius:22px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.2)"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px"><h2 style="margin:0">'+esc(title)+'</h2><button type="button" data-close-order-products style="border:0;border-radius:999px;width:42px;height:42px;font-size:22px;background:#f1f1f3">×</button></div><div id="mediousaoOrderProductsBody">'+body+'</div></div>';document.body.appendChild(m);m.querySelector('[data-close-order-products]').onclick=close;m.addEventListener('click',e=>{if(e.target===m)close()});return m}
  async function openProducts(orderNo){
+  orderNo=cleanOrderNo(orderNo);
   const m=modal('Productos · '+orderNo,'<div style="padding:18px 0;color:#777">Cargando productos…</div>');const body=m.querySelector('#mediousaoOrderProductsBody');
   try{
+   if(!orderNo)throw new Error('Número de pedido inválido');
    const oq=await client.from('orders').select('id').eq('order_number',orderNo).maybeSingle();if(oq.error)throw oq.error;if(!oq.data?.id)throw new Error('Pedido no encontrado');
    const iq=await client.from('order_items').select('product_id,product_name,quantity,price').eq('order_id',oq.data.id);if(iq.error)throw iq.error;
    const items=iq.data||[];if(!items.length){body.innerHTML='<div style="padding:18px 0">No hay productos registrados en este pedido.</div>';return}

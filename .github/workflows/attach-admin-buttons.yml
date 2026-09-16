@@ -22,11 +22,6 @@ jobs:
           marker = '</body>'
           if marker not in s:
               raise SystemExit('No se encontró </body> en index.html')
-          # Módulos antiguos que ya no deben ejecutarse.
-          for old in [
-              '<script src="order-sold-sync.js"></script>',
-          ]:
-              s = s.replace(old + '\n', '').replace(old, '')
           tags = [
               '<script src="admin-buttons.js"></script>',
               '<script src="appearance-header.js"></script>',
@@ -37,6 +32,7 @@ jobs:
               '<script src="subcategory-menu.js"></script>',
               '<script src="product-edit.js"></script>',
               '<script src="product-sold.js"></script>',
+              '<script src="order-sold-sync.js"></script>',
               '<script src="customer-order-cancel.js"></script>',
               '<script src="cart-fix.js"></script>',
               '<script src="checkout-fix.js"></script>',
@@ -50,11 +46,12 @@ jobs:
               '<script src="checkout-phone-format.js"></script>',
               '<script src="admin-order-products.js"></script>',
           ]
-          before = s
+          changed = False
           for tag in tags:
               if tag not in s:
                   s = s.replace(marker, tag + '\n' + marker, 1)
-          if s != before:
+                  changed = True
+          if changed:
               p.write_text(s, encoding='utf-8')
           PY
       - name: Commit if changed
